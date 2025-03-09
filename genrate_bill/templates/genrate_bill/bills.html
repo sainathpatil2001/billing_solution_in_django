@@ -1,0 +1,352 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Bills</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .search-container {
+            margin: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .bill-table {
+            margin-top: 20px;
+        }
+        .nav-buttons {
+            margin: 20px;
+        }
+        .print-button {
+            display: none;
+        }
+        .search-input {
+            position: relative;
+        }
+        .search-input .spinner-border {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1rem;
+            height: 1rem;
+            display: none;
+        }
+        .search-input.loading .spinner-border {
+            display: inline-block;
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+            .print-button {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-buttons no-print">
+        <button onclick="window.location.href='/'" class="btn btn-secondary">
+            <i class="fas fa-home"></i> Home
+        </button>
+        <button onclick="window.location.href='/billing/'" class="btn btn-primary">
+            <i class="fas fa-calculator"></i> New Bill
+        </button>
+    </div>
+
+    <div class="container">
+        <div class="search-container no-print">
+            <h2>Search Bills</h2>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="search-input">
+                        <input type="text" id="billNumber" class="form-control" placeholder="Bill Number">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="search-input">
+                        <input type="text" id="customerName" class="form-control" placeholder="Customer Name">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="search-input">
+                        <input type="date" id="billDate" class="form-control">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <button onclick="clearSearch()" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bill-table">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Bill Number</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Total Amount</th>
+                        <th>Discount</th>
+                        <th>Final Amount</th>
+                        <th class="no-print">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="billsTableBody">
+                    <!-- Bills will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bill Print Modal -->
+    <div class="modal fade" id="billModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header no-print">
+                    <h5 class="modal-title">Bill Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="billDetails">
+                    <!-- Bill details will be populated here -->
+                </div>
+                <div class="modal-footer no-print">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="printBill()">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let searchTimeout = null;
+        const SEARCH_DELAY = 300; // milliseconds
+
+        // Initialize search on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            searchBills();
+            setupSearchListeners();
+        });
+
+        function setupSearchListeners() {
+            // Real-time search for bill number
+            document.getElementById('billNumber').addEventListener('input', function(e) {
+                handleSearchInput('billNumber');
+            });
+
+            // Real-time search for customer name
+            document.getElementById('customerName').addEventListener('input', function(e) {
+                handleSearchInput('customerName');
+            });
+
+            // Real-time search for date
+            document.getElementById('billDate').addEventListener('change', function(e) {
+                handleSearchInput('billDate');
+            });
+        }
+
+        function handleSearchInput(inputId) {
+            const inputContainer = document.getElementById(inputId).parentElement;
+            inputContainer.classList.add('loading');
+
+            // Clear previous timeout
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+
+            // Set new timeout for search
+            searchTimeout = setTimeout(() => {
+                searchBills()
+                    .catch(error => {
+                        console.error('Search error:', error);
+                        document.getElementById('billsTableBody').innerHTML = 
+                            `<tr><td colspan="7" class="text-center text-danger">Error: ${error.message}</td></tr>`;
+                    })
+                    .finally(() => {
+                        inputContainer.classList.remove('loading');
+                    });
+            }, SEARCH_DELAY);
+        }
+
+        async function searchBills() {
+            const billNumber = document.getElementById('billNumber').value.trim();
+            const customerName = document.getElementById('customerName').value.trim();
+            const billDate = document.getElementById('billDate').value;
+
+            // Show loading state
+            document.getElementById('billsTableBody').innerHTML = 
+                '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+
+            try {
+                // Build query string
+                const params = new URLSearchParams();
+                if (billNumber) params.append('bill_number', billNumber);
+                if (customerName) params.append('customer_name', customerName);
+                if (billDate) params.append('date', billDate);
+
+                const response = await fetch(`/billing/search-bills/?${params.toString()}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    displayBills(data.bills);
+                } else {
+                    throw new Error(data.error || 'Failed to search bills');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('billsTableBody').innerHTML = 
+                    `<tr><td colspan="7" class="text-center text-danger">Error: ${error.message}</td></tr>`;
+                throw error; // Re-throw to be handled by caller
+            }
+        }
+
+        function displayBills(bills) {
+            const tbody = document.getElementById('billsTableBody');
+            tbody.innerHTML = '';
+
+            if (!bills || bills.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No bills found</td></tr>';
+                return;
+            }
+
+            bills.forEach(bill => {
+                try {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${bill.bill_number || 'N/A'}</td>
+                            <td>${bill.date || 'N/A'}</td>
+                            <td>${bill.customer_name || 'N/A'}</td>
+                            <td>₹${parseFloat(bill.total_amount || 0).toFixed(2)}</td>
+                            <td>₹${parseFloat(bill.discount || 0).toFixed(2)}</td>
+                            <td>₹${parseFloat(bill.final_amount || 0).toFixed(2)}</td>
+                            <td class="no-print">
+                                <button onclick="viewBill(${bill.bill_number})" class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button onclick="printBillDetails(${bill.bill_number})" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-print"></i> Print
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                } catch (error) {
+                    console.error('Error displaying bill:', error);
+                }
+            });
+        }
+
+        function clearSearch() {
+            document.getElementById('billNumber').value = '';
+            document.getElementById('customerName').value = '';
+            document.getElementById('billDate').value = '';
+            searchBills();
+        }
+
+        function viewBill(billId) {
+            fetch(`/billing/bill-details/${billId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayBillDetails(data.bill);
+                        const modal = new bootstrap.Modal(document.getElementById('billModal'));
+                        modal.show();
+                    } else {
+                        throw new Error(data.error || 'Failed to fetch bill details');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error fetching bill details: ' + error.message);
+                });
+        }
+
+        function displayBillDetails(bill) {
+            document.getElementById('billDetails').innerHTML = `
+                <div class="bill-content">
+                    <div class="text-center mb-4">
+                        <h3>Your Company Name</h3>
+                        <p>Address Line 1, Address Line 2</p>
+                        <p>Phone: +1234567890 | Email: example@email.com</p>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Bill No:</strong> ${bill.bill_number}<br>
+                            <strong>Date:</strong> ${bill.date}
+                        </div>
+                        <div class="col-6">
+                            <strong>Customer:</strong> ${bill.customer_name}<br>
+                            <strong>Phone:</strong> ${bill.customer_phone || 'N/A'}<br>
+                            <strong>Address:</strong> ${bill.customer_address || 'N/A'}
+                        </div>
+                    </div>
+
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${bill.items.map(item => `
+                                <tr>
+                                    <td>${item.product_name}</td>
+                                    <td>${item.quantity}</td>
+                                    <td>₹${parseFloat(item.price).toFixed(2)}</td>
+                                    <td>₹${parseFloat(item.total_price).toFixed(2)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Total Amount:</strong></td>
+                                <td>₹${parseFloat(bill.total_amount).toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Discount:</strong></td>
+                                <td>₹${parseFloat(bill.discount).toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Final Amount:</strong></td>
+                                <td>₹${parseFloat(bill.final_amount).toFixed(2)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div class="mt-4">
+                        <p class="text-center">Thank you for your business!</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function printBillDetails(billId) {
+            viewBill(billId);
+            setTimeout(() => {
+                window.print();
+            }, 1000);
+        }
+    </script>
+</body>
+</html> 

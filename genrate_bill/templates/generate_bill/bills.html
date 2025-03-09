@@ -1,0 +1,207 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Bills</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .search-container {
+            margin: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .bill-table {
+            margin-top: 20px;
+        }
+        .nav-buttons {
+            margin: 20px;
+        }
+        .print-button {
+            display: none;
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+            .print-button {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-buttons no-print">
+        <button onclick="window.location.href='/'" class="btn btn-secondary">
+            <i class="fas fa-home"></i> Home
+        </button>
+        <button onclick="window.location.href='/billing/'" class="btn btn-primary">
+            <i class="fas fa-calculator"></i> New Bill
+        </button>
+    </div>
+
+    <div class="container">
+        <div class="search-container no-print">
+            <h2>Search Bills</h2>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" id="billNumber" class="form-control" placeholder="Bill Number">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" id="customerName" class="form-control" placeholder="Customer Name">
+                </div>
+                <div class="col-md-3">
+                    <input type="date" id="billDate" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <button onclick="searchBills()" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bill-table">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Bill Number</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Total Amount</th>
+                        <th>Discount</th>
+                        <th>Final Amount</th>
+                        <th class="no-print">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="billsTableBody">
+                    <!-- Bills will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bill Print Modal -->
+    <div class="modal fade" id="billModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header no-print">
+                    <h5 class="modal-title">Bill Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="billDetails">
+                    <!-- Bill details will be populated here -->
+                </div>
+                <div class="modal-footer no-print">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="printBill()">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function searchBills() {
+            const billNumber = document.getElementById('billNumber').value;
+            const customerName = document.getElementById('customerName').value;
+            const billDate = document.getElementById('billDate').value;
+
+            fetch(`/billing/search-bills/?bill_number=${billNumber}&customer_name=${customerName}&date=${billDate}`)
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('billsTableBody');
+                    tbody.innerHTML = '';
+                    
+                    data.bills.forEach(bill => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${bill.bill_number}</td>
+                                <td>${bill.date}</td>
+                                <td>${bill.customer_name}</td>
+                                <td>₹${bill.total_amount}</td>
+                                <td>₹${bill.discount}</td>
+                                <td>₹${bill.final_amount}</td>
+                                <td class="no-print">
+                                    <button onclick="viewBill(${bill.id})" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                    <button onclick="printBillDetails(${bill.id})" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-print"></i> Print
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error searching bills');
+                });
+        }
+
+        function viewBill(billId) {
+            fetch(`/billing/bill-details/${billId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    const modal = new bootstrap.Modal(document.getElementById('billModal'));
+                    document.getElementById('billDetails').innerHTML = generateBillHTML(data);
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error fetching bill details');
+                });
+        }
+
+        function generateBillHTML(bill) {
+            return `
+                <div class="bill-content">
+                    <div class="text-center mb-4">
+                        <h3>Your Company Name</h3>
+                        <p>Address Line 1, Address Line 2</p>
+                        <p>Phone: +1234567890 | Email: example@email.com</p>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Bill No:</strong> ${bill.bill_number}<br>
+                            <strong>Date:</strong> ${bill.date}
+                        </div>
+                        <div class="col-6">
+                            <strong>Customer:</strong> ${bill.customer_name}<br>
+                            <strong>Phone:</strong> ${bill.customer_phone}
+                        </div>
+                    </div>
+
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${bill.items.map(item => `
+                                <tr>
+                                    <td>${item.product_name}</td>
+                                    <td>${item.quantity}</td>
+                                    <td>₹${item.price}</td>
+                                    <td>₹${item.total_price}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Total Amount:</strong></td>
+                                <td>₹${bill.total_amount}</td>
+                            </tr>
+                            <tr>
+</script> 

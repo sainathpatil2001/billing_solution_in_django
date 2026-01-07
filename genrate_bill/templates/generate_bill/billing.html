@@ -92,9 +92,94 @@
         .keyboard-shortcuts.show {
             display: block;
         }
+
+        .billing-button {
+            width: calc(100% - 2rem); /* Full width minus padding */
+            margin: 0 1rem; /* Add horizontal margin */
+            padding: 0.75rem 1rem; /* Add vertical and horizontal padding inside button */
+            display: block; /* Make button full width */
+            text-align: left; /* Align text to left */
+        }
+
+        /* New navigation styles */
+        .top-nav {
+            background-color: var(--primary-color);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+        }
+        
+        .nav-brand {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s ease;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+        
+        .nav-link:hover {
+            color: white;
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .nav-link i {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .nav-link.active {
+            color: white;
+            background-color: rgba(255,255,255,0.15);
+        }
     </style>
 </head>
 <body>
+    <!-- New Navigation Menu -->
+    <div class="top-nav">
+        <div class="nav-brand">
+            <i class="fas fa-cash-register"></i>
+            <span>Billing System</span>
+        </div>
+        <div class="nav-links">
+            <a href="{% url 'inventory_dashboard' %}" class="nav-link">
+                <i class="fas fa-box-open"></i>
+                <span>Inventory</span>
+            </a>
+            <a href="{% url 'home' %}" class="nav-link">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="{% url 'billing' %}" class="nav-link active">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>Billing</span>
+            </a>
+            <a href="{% url 'bills_list' %}" class="nav-link">
+                <i class="fas fa-search"></i>
+                <span>Search Bills</span>
+            </a>
+        </div>
+    </div>
+
     <div class="billing-container">
         <!-- Left Section: Product Search and Bill Items -->
         <div class="main-section">
@@ -226,7 +311,7 @@ function searchProducts(query) {
         return;
     }
 
-    fetch(`/billing/search-billing-products/?query=${encodeURIComponent(query)}`)
+    fetch(`/billing/search-products/?q=${encodeURIComponent(query)}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');

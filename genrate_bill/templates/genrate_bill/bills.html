@@ -4,184 +4,580 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Bills</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Search Bills - MediBill Pro</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
     <style>
-        .search-container {
-            margin: 20px;
-            padding: 20px;
-            background-color: #f8f9fa;
+        :root {
+            --sidebar-width: 260px;
+            --primary-bg: #f3f4f6;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #e2e8f0;
+            --accent-color: #3b82f6;
+            --card-bg: #ffffff;
+            --font-family: 'Inter', sans-serif;
+            --border-color: #e5e7eb;
+            --primary-color: #4361ee;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--primary-bg);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden; /* Prevent body scroll in desktop app feel */
+        }
+
+        /* Sidebar Styles (Shared) */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            flex-shrink: 0;
+        }
+
+        .brand-section {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .brand-text { font-weight: 600; font-size: 1.1rem; letter-spacing: 0.5px; }
+
+        .nav-menu {
+            flex: 1;
+            padding: 1.5rem 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .nav-item:hover, .nav-item.active { background-color: rgba(255,255,255,0.1); color: white; }
+        .nav-item.active { background-color: var(--accent-color); }
+        .nav-item i { font-size: 1.2rem; }
+
+        .user-section {
+            padding: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.2);
+        }
+
+        .business-badge-sidebar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem;
             border-radius: 8px;
         }
-        .bill-table {
-            margin-top: 20px;
+        
+        .business-logo-mini {
+            width: 36px; height: 36px; border-radius: 50%; background: white; 
+            object-fit: contain; border: 2px solid rgba(255,255,255,0.2);
         }
-        .nav-buttons {
-            margin: 20px;
-        }
-        .print-button {
-            display: none;
-        }
-        .search-input {
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
             position: relative;
         }
-        .search-input .spinner-border {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 1rem;
-            height: 1rem;
+        
+        .content-scrollable {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        /* Glass Card Utility */
+        .glass-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Filter Styles */
+        .form-control, .form-select {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+            font-size: 0.9rem;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+        
+        .search-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 0.3rem;
+            display: block;
+        }
+
+        /* Table Area */
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .table thead th {
+            background: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .table tbody td {
+            vertical-align: middle;
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+            font-size: 0.95rem;
+        }
+
+        .status-badge {
+            padding: 0.35rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .status-paid { background-color: #dcfce7; color: #166534; }
+        .status-partial { background-color: #fef9c3; color: #854d0e; }
+        .status-pending { background-color: #fee2e2; color: #991b1b; }
+
+        .btn-action {
+            width: 32px; height: 32px;
+            border-radius: 6px;
+            display: inline-flex; align-items: center; justify-content: center;
+            border: none;
+            margin: 0 2px;
+            transition: all 0.2s;
+        }
+        .btn-view { background: #e0f2fe; color: #0284c7; }
+        .btn-view:hover { background: #0284c7; color: white; }
+        .btn-print { background: #dcfce7; color: #16a34a; }
+        .btn-print:hover { background: #16a34a; color: white; }
+        .btn-pay { background: #ffedd5; color: #ea580c; }
+        .btn-pay:hover { background: #ea580c; color: white; }
+
+        /* Loader */
+        .spinner-loader {
+            width: 1rem; height: 1rem;
+            border: 2px solid rgba(59, 130, 246, 0.2);
+            border-right-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
             display: none;
         }
-        .search-input.loading .spinner-border {
-            display: inline-block;
+        @keyframes spin { 100% { transform: translateY(-50%) rotate(360deg); } }
+        .loading .spinner-loader { display: block; }
+        .loading .input-icon { display: none; }
+        .input-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+
+        /* App Branding */
+        .app-branding {
+            position: absolute; bottom: 5px; right: 15px; font-size: 0.7rem; 
+            color: #cbd5e1; pointer-events: none; z-index: 100;
         }
+
+        /* Responsive */
+        @media screen and (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); position: absolute; z-index: 1000; }
+            .sidebar.show { transform: translateX(0); }
+            /* Add toggle trigger if needed, but assuming desktop main usage */
+        }
+
+        /* PRINT STYLES - Half Page Horizontal (A5 Landscape on A4) */
         @media print {
-            .no-print {
-                display: none;
+            @page { 
+                size: A4 portrait; 
+                margin: 0.5cm; 
             }
-            .print-button {
-                display: block;
+            
+            body { 
+                background: white;
+                -webkit-print-color-adjust: exact;
             }
+
+            /* Hide everything standard */
+            .sidebar, .main-content, .no-print, .modal-header, .modal-footer, .modal-backdrop { 
+                display: none !important; 
+                visibility: hidden !important;
+            }
+
+            /* Make modal visible and reshape it */
+            #billModal {
+                position: static !important;
+                display: block !important;
+                visibility: visible !important;
+                width: 100% !important;
+                height: auto !important;
+                background: white !important;
+                overflow: visible !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .modal-dialog {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .modal-content {
+                border: none !important;
+                box-shadow: none !important;
+                width: 100% !important;
+            }
+
+            .modal-body {
+                padding: 0 !important;
+                visibility: visible !important;
+            }
+
+            /* The specific bill container adjustments for Half Page */
+            #billDetails {
+                width: 100%;
+                /* A4 Height is ~297mm. Half is ~148mm. We set a max to ensure it fits.*/
+                max-height: 140mm; 
+                position: relative;
+                overflow: hidden;
+                border: 1px solid #ddd; /* Light border to visualize cut line */
+                padding: 15px !important;
+                box-sizing: border-box;
+            }
+            
+            /* Scaling for compact fit */
+            #billDetails h2 { font-size: 1.5rem !important; }
+            #billDetails h5 { font-size: 1rem !important; }
+            #billDetails p, #billDetails td, #billDetails th, #billDetails span { 
+                font-size: 0.75rem !important; 
+            }
+            
+            /* Compact Spacing */
+            #billDetails .mb-3, #billDetails .mb-4 { margin-bottom: 0.5rem !important; }
+            #billDetails .p-4 { padding: 0 !important; }
+            #billDetails .row { margin-left: -5px; margin-right: -5px; }
+            #billDetails .col-*, #billDetails [class^="col-"] { padding-left: 5px; padding-right: 5px; }
+            
+            /* Signature & Footer in Fixed Position relative to half-page container */
+            #billDetails .border-top { border-top: 1px solid #aaa !important; margin-top: 1rem !important; padding-top: 0.5rem !important; }
+            
+            #watermark { display: flex !important; opacity: 0.03 !important; }
         }
     </style>
 </head>
 <body>
-    <div class="nav-buttons no-print">
-        <button onclick="window.location.href='/'" class="btn btn-secondary">
-            <i class="fas fa-home"></i> Home
-        </button>
-        <button onclick="window.location.href='/billing/'" class="btn btn-primary">
-            <i class="fas fa-calculator"></i> New Bill
-        </button>
+
+    <!-- Desktop Sidebar -->
+    <div class="sidebar no-print">
+        <div class="brand-section">
+            <div class="brand-logo"><i class="bi bi-wallet2"></i></div>
+            <div class="brand-text">MediBill Pro</div>
+        </div>
+        <div class="nav-menu">
+            <a href="/billing/" class="nav-item">
+                <i class="bi bi-receipt-cutoff"></i><span>New Invoice</span>
+            </a>
+            <a href="/billing/bills/" class="nav-item active">
+                <i class="bi bi-clock-history"></i><span>History & Search</span>
+            </a>
+            <a href="/inventory/inventory_management/" class="nav-item">
+                <i class="bi bi-box-seam"></i><span>Inventory</span>
+            </a>
+            <a href="/billing/backup/" class="nav-item">
+                <i class="bi bi-database-check"></i><span>Backup & Restore</span>
+            </a>
+            <a href="/billing/business-settings/" class="nav-item">
+                <i class="bi bi-gear"></i><span>Settings</span>
+            </a>
+        </div>
+        <div class="user-section">
+            <div class="business-badge-sidebar">
+                {% if business_info.logo %}
+                <img src="{{ business_info.logo.url }}" alt="Logo" class="business-logo-mini">
+                {% else %}
+                <div class="business-logo-mini d-flex align-items-center justify-content-center text-primary fw-bold">
+                    {{ business_info.company_name|slice:":1" }}
+                </div>
+                {% endif %}
+                <div class="d-flex flex-column text-truncate">
+                    <span class="small fw-bold text-white text-truncate">{{ business_info.company_name|default:"My Business" }}</span>
+                    <span class="small text-muted" style="font-size: 0.7rem;">Dashboard</span>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="container">
-        <div class="search-container no-print">
-            <h2>Search Bills</h2>
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="search-input">
-                        <input type="text" id="billNumber" class="form-control" placeholder="Bill Number">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="content-scrollable no-print">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <h4 class="fw-bold m-0 text-dark">Transaction History</h4>
+                <div class="text-end">
+                    <span class="text-muted small">Manage and track all your invoices</span>
                 </div>
-                <div class="col-md-3">
-                    <div class="search-input">
-                        <input type="text" id="customerName" class="form-control" placeholder="Customer Name">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="search-input">
-                        <input type="date" id="billDate" class="form-control">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <button onclick="clearSearch()" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Clear
+            </div>
+
+            <!-- Filter Section -->
+            <div class="glass-card">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="fw-bold text-primary m-0"><i class="bi bi-sliders me-2"></i>Filter Records</h6>
+                    <button onclick="clearSearch()" class="btn btn-sm btn-light border text-muted">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
                     </button>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="position-relative">
+                            <span class="search-label">Bill Number</span>
+                            <div class="position-relative">
+                                <input type="text" id="billNumber" class="form-control" placeholder="Type ID...">
+                                <i class="bi bi-hash input-icon"></i>
+                                <div class="spinner-loader"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="position-relative">
+                            <span class="search-label">Customer Name</span>
+                            <div class="position-relative">
+                                <input type="text" id="customerName" class="form-control" placeholder="Search name...">
+                                <i class="bi bi-person input-icon"></i>
+                                <div class="spinner-loader"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="position-relative">
+                            <span class="search-label">Payment Status</span>
+                            <select id="paymentStatus" class="form-select">
+                                <option value="">All Statuses</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Partially Paid">Partially Paid</option>
+                                <option value="Pending">Pending</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="position-relative">
+                            <span class="search-label">Date</span>
+                            <input type="date" id="billDate" class="form-control">
+                             <div class="spinner-loader"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Bill #</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">Paid</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center" style="width: 140px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="billsTableBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <div class="bill-table">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Bill Number</th>
-                        <th>Date</th>
-                        <th>Customer</th>
-                        <th>Total Amount</th>
-                        <th>Discount</th>
-                        <th>Final Amount</th>
-                        <th class="no-print">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="billsTableBody">
-                    <!-- Bills will be populated here -->
-                </tbody>
-            </table>
+        <div class="app-branding">
+           MediBill Pro v2.0
         </div>
     </div>
 
-    <!-- Bill Print Modal -->
+    <!-- Modals -->
+    <!-- Bill Details Modal (Printing) -->
     <div class="modal fade" id="billModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header no-print">
-                    <h5 class="modal-title">Bill Details</h5>
+                <div class="modal-header no-print border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Invoice Preview</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" id="billDetails">
-                    <!-- Bill details will be populated here -->
-                </div>
-                <div class="modal-footer no-print">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <div class="modal-body" id="billDetails"></div>
+                <div class="modal-footer no-print border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" onclick="printBill()">
-                        <i class="fas fa-print"></i> Print
+                        <i class="bi bi-printer-fill me-2"></i>Print
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Payment Update Modal -->
+    <div class="modal fade" id="updatePaymentModal" tabindex="-1">
+         <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 bg-light">
+                    <h5 class="modal-title fw-bold text-primary">Update Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="updatePaymentForm">
+                        <input type="hidden" id="updateBillId">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">New Status</label>
+                            <select class="form-select" id="updateStatus" onchange="handleUpdateStatusChange()">
+                                <option value="Pending">Pending</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Partially Paid">Partially Paid</option>
+                            </select>
+                        </div>
+
+                        <div id="updatePaymentDetails" style="display: none;" class="bg-light p-3 rounded mb-3 border">
+                            <div class="mb-3" id="updatePaidAmountContainer" style="display: none;">
+                                <label class="form-label small text-muted text-uppercase fw-bold">Amount to Pay</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0 fw-bold">₹</span>
+                                    <input type="number" class="form-control border-start-0 ps-0" id="updatePaidAmount" min="0" step="0.01">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small text-muted text-uppercase fw-bold">Mode</label>
+                                    <select class="form-select" id="updatePaymentMode">
+                                        <option value="Cash">Cash</option>
+                                        <option value="Online">Online</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small text-muted text-uppercase fw-bold">Date</label>
+                                    <input type="date" class="form-control" id="updatePaymentDate">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Security Password</label>
+                            <input type="password" class="form-control" id="securityPassword" placeholder="Admin Password" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitPaymentUpdate()">Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
         let searchTimeout = null;
-        const SEARCH_DELAY = 300; // milliseconds
+        const SEARCH_DELAY = 300; 
 
-        // Initialize search on page load
         document.addEventListener('DOMContentLoaded', function() {
             searchBills();
-            setupSearchListeners();
+            
+            // Listeners
+            document.getElementById('billNumber').addEventListener('input', () => handleSearchInput('billNumber'));
+            document.getElementById('customerName').addEventListener('input', () => handleSearchInput('customerName'));
+            document.getElementById('billDate').addEventListener('change', () => handleSearchInput('billDate'));
+            // Payment status immediate
+            document.getElementById('paymentStatus').addEventListener('change', () => searchBills());
+            
+            // Highlight bill if query param exists
+            const urlParams = new URLSearchParams(window.location.search);
+            const highlightId = urlParams.get('highlight');
+            if(highlightId) {
+                document.getElementById('billNumber').value = highlightId;
+                searchBills();
+                // Optionally open details automatically:
+                // viewBill(highlightId);
+            }
         });
 
-        function setupSearchListeners() {
-            // Real-time search for bill number
-            document.getElementById('billNumber').addEventListener('input', function(e) {
-                handleSearchInput('billNumber');
-            });
-
-            // Real-time search for customer name
-            document.getElementById('customerName').addEventListener('input', function(e) {
-                handleSearchInput('customerName');
-            });
-
-            // Real-time search for date
-            document.getElementById('billDate').addEventListener('change', function(e) {
-                handleSearchInput('billDate');
-            });
-        }
-
         function handleSearchInput(inputId) {
-            const inputContainer = document.getElementById(inputId).parentElement;
-            inputContainer.classList.add('loading');
+            const el = document.getElementById(inputId);
+            const loader = el.parentElement.querySelector('.spinner-loader'); // Need to find logic to show spinner
+            // The spinner is inside .position-relative next to input. 
+            // My markup: pos-rel > input + icon + spinner.
+            // .loading class on parent is best.
+            const container = el.parentElement;
+            container.classList.add('loading');
 
-            // Clear previous timeout
-            if (searchTimeout) {
-                clearTimeout(searchTimeout);
-            }
+            if (searchTimeout) clearTimeout(searchTimeout);
 
-            // Set new timeout for search
             searchTimeout = setTimeout(() => {
                 searchBills()
-                    .catch(error => {
-                        console.error('Search error:', error);
-                        document.getElementById('billsTableBody').innerHTML = 
-                            `<tr><td colspan="7" class="text-center text-danger">Error: ${error.message}</td></tr>`;
-                    })
                     .finally(() => {
-                        inputContainer.classList.remove('loading');
+                        container.classList.remove('loading');
                     });
             }, SEARCH_DELAY);
         }
@@ -190,17 +586,20 @@
             const billNumber = document.getElementById('billNumber').value.trim();
             const customerName = document.getElementById('customerName').value.trim();
             const billDate = document.getElementById('billDate').value;
+            const paymentStatus = document.getElementById('paymentStatus').value;
+            const tbody = document.getElementById('billsTableBody');
 
-            // Show loading state
-            document.getElementById('billsTableBody').innerHTML = 
-                '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+            // Initial load state if empty
+            if(!tbody.innerHTML.trim()) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted">Loading...</td></tr>';
+            }
 
             try {
-                // Build query string
                 const params = new URLSearchParams();
                 if (billNumber) params.append('bill_number', billNumber);
                 if (customerName) params.append('customer_name', customerName);
                 if (billDate) params.append('date', billDate);
+                if (paymentStatus) params.append('payment_status', paymentStatus);
 
                 const response = await fetch(`/billing/search-bills/?${params.toString()}`);
                 const data = await response.json();
@@ -208,13 +607,11 @@
                 if (data.success) {
                     displayBills(data.bills);
                 } else {
-                    throw new Error(data.error || 'Failed to search bills');
+                    console.error(data.error);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('billsTableBody').innerHTML = 
-                    `<tr><td colspan="7" class="text-center text-danger">Error: ${error.message}</td></tr>`;
-                throw error; // Re-throw to be handled by caller
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Error loading data</td></tr>`;
             }
         }
 
@@ -223,33 +620,61 @@
             tbody.innerHTML = '';
 
             if (!bills || bills.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No bills found</td></tr>';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="bi bi-search display-6 text-muted opacity-25 mb-3 d-block"></i>
+                            <p class="text-muted mb-0">No transactions found</p>
+                        </td>
+                    </tr>`;
                 return;
             }
 
             bills.forEach(bill => {
-                try {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${bill.bill_number || 'N/A'}</td>
-                            <td>${bill.date || 'N/A'}</td>
-                            <td>${bill.customer_name || 'N/A'}</td>
-                            <td>₹${parseFloat(bill.total_amount || 0).toFixed(2)}</td>
-                            <td>₹${parseFloat(bill.discount || 0).toFixed(2)}</td>
-                            <td>₹${parseFloat(bill.final_amount || 0).toFixed(2)}</td>
-                            <td class="no-print">
-                                <button onclick="viewBill(${bill.bill_number})" class="btn btn-sm btn-info">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                                <button onclick="printBillDetails(${bill.bill_number})" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-print"></i> Print
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                } catch (error) {
-                    console.error('Error displaying bill:', error);
+                let statusClass = 'status-pending';
+                let icon = 'bi-exclamation-circle';
+                
+                if (bill.payment_status === 'Paid') {
+                    statusClass = 'status-paid';
+                    icon = 'bi-check-circle';
+                } else if (bill.payment_status === 'Partially Paid') {
+                    statusClass = 'status-partial';
+                    icon = 'bi-pie-chart';
                 }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span class="fw-bold text-primary">#${bill.bill_number}</span></td>
+                    <td>${bill.date}</td>
+                    <td>
+                        <div class="fw-bold text-dark">${bill.customer_name || 'Walking Customer'}</div>
+                        ${bill.customer_phone ? `<small class="text-muted d-block" style="font-size: 0.75rem;"><i class="bi bi-telephone me-1"></i>${bill.customer_phone}</small>` : ''}
+                        ${bill.customer_address ? `<small class="text-muted d-block text-truncate" style="max-width: 180px; font-size: 0.75rem;"><i class="bi bi-geo-alt me-1"></i>${bill.customer_address}</small>` : ''}
+                    </td>
+                    <td class="text-end fw-bold">₹${parseFloat(bill.final_amount || 0).toFixed(2)}</td>
+                    <td class="text-end text-success">
+                         ₹${parseFloat(bill.paid_amount || 0).toFixed(2)}
+                    </td>
+                    <td class="text-center">
+                        <span class="status-badge ${statusClass}">
+                            <i class="bi ${icon}"></i> ${bill.payment_status || 'Pending'}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                            <button onclick="viewBill(${bill.bill_number})" class="btn-action btn-view" title="View Details">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                            <button onclick="printBillDetails(${bill.bill_number})" class="btn-action btn-print" title="Print Invoice">
+                                <i class="bi bi-printer"></i>
+                            </button>
+                            <button onclick="updatePaymentStatus(${bill.bill_number}, '${bill.payment_status}', ${bill.paid_amount || 0})" class="btn-action btn-pay" title="Update Payment">
+                                <i class="bi bi-credit-card"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
             });
         }
 
@@ -257,96 +682,402 @@
             document.getElementById('billNumber').value = '';
             document.getElementById('customerName').value = '';
             document.getElementById('billDate').value = '';
+            document.getElementById('paymentStatus').value = '';
             searchBills();
         }
 
+        // --- Details & Printing ---
         function viewBill(billId) {
-            fetch(`/billing/bill-details/${billId}/`)
-                .then(response => response.json())
+            return fetch(`/billing/bill-details/${billId}/`)
+                .then(res => res.json())
                 .then(data => {
                     if (data.success) {
                         displayBillDetails(data.bill);
-                        const modal = new bootstrap.Modal(document.getElementById('billModal'));
-                        modal.show();
-                    } else {
-                        throw new Error(data.error || 'Failed to fetch bill details');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error fetching bill details: ' + error.message);
+                        new bootstrap.Modal(document.getElementById('billModal')).show();
+                    } else alert('Error: ' + data.error);
                 });
         }
 
-        function displayBillDetails(bill) {
-            document.getElementById('billDetails').innerHTML = `
-                <div class="bill-content">
-                    <div class="text-center mb-4">
-                        <h3>Your Company Name</h3>
-                        <p>Address Line 1, Address Line 2</p>
-                        <p>Phone: +1234567890 | Email: example@email.com</p>
-                    </div>
+        function printBillDetails(billId) {
+            viewBill(billId).then(() => {
+                setTimeout(() => window.print(), 500);
+            });
+        }
+
+        function printBill() { window.print(); }
+
+        // --- Render Bill Details (Reused Logic) ---
+        // --- Render Bill Details (Replaced for GST Layout) ---
+function displayBillDetails(bill) {
+    const business = bill.business_info || {};
+
+    // GST Invoice Layout
+    let html = `
+                <style>
+                    /* Invoice Reset & Base */
+                    .invoice-box * { box-sizing: border-box; }
+                    .invoice-box {
+                        font-family: 'Arial Narrow', Arial, sans-serif;
+                        font-size: 11px;
+                        color: black;
+                        line-height: 1.3;
+                        border: 1px solid black;
+                        width: 100%;
+                        max-width: 210mm; /* A4 Width */
+                        margin: 0 auto;
+                        background: white;
+                    }
                     
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <strong>Bill No:</strong> ${bill.bill_number}<br>
-                            <strong>Date:</strong> ${bill.date}
+                    /* Utility */
+                    .w-100 { width: 100%; }
+                    .fw-bold { font-weight: bold; }
+                    .text-uppercase { text-transform: uppercase; }
+                    .text-right { text-align: right; }
+                    .text-center { text-align: center; }
+                    .d-flex { display: flex; }
+                    .align-top { align-items: flex-start; }
+                    .border-bottom { border-bottom: 1px solid black; }
+                    .border-right { border-right: 1px solid black; }
+                    .p-1 { padding: 4px; }
+                    .p-2 { padding: 8px; }
+                    .m-0 { margin: 0; }
+
+                    /* Header Grid */
+                    .header-section { display: flex; border-bottom: 1px solid black; }
+                    .seller-col { width: 50%; border-right: 1px solid black; padding: 8px; }
+                    .buyer-col { width: 50%; padding: 8px; position: relative; }
+                    
+                    .company-name { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+                    .invoice-meta { position: absolute; bottom: 8px; right: 8px; text-align: right; }
+                    .invoice-type { font-size: 16px; font-weight: bold; text-decoration: underline; margin-bottom: 5px; display:block; text-align: right;}
+
+                    /* Table */
+                    .items-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+                    .items-table th { border-bottom: 1px solid black; border-right: 1px solid black; background-color: #f8f9fa; font-weight: bold; padding: 4px 2px; text-align: center; }
+                    .items-table td { border-bottom: 1px solid black; border-right: 1px solid black; padding: 4px 2px; vertical-align: top; }
+                    .items-table td:last-child, .items-table th:last-child { border-right: none; }
+                    .items-table tr:last-child td { border-bottom: 1px solid black; } /* Ensure closure */
+
+                    /* Columns width tweaks */
+                    .col-hsn { width: 40px; }
+                    .col-gst { width: 35px; }
+                    .col-dm { width: 35px; }
+                    .col-prod { } /* Auto */
+                    .col-pd { width: 35px; }
+                    .col-mfr { width: 40px; }
+                    .col-pack { width: 45px; }
+                    .col-mrp { width: 50px; }
+                    .col-batch { width: 60px; }
+                    .col-exp { width: 40px; }
+                    .col-qty { width: 35px; }
+                    .col-qd { width: 30px; }
+                    .col-rate { width: 50px; }
+                    .col-amt { width: 60px; }
+
+                    /* Footer */
+                    .footer-section { padding: 5px; display: flex; justify-content: space-between; align-items: flex-end; }
+                    .total-box { font-size: 14px; font-weight: bold; }
+                    .qr-placeholder { width: 80px; height: 80px; border: 1px dashed #ccc; display: flex; align-items: center; justify-content: center; }
+                    
+                    /* Print Overrides */
+                    @media print {
+                        @page { size: A4; margin: 0.5cm; }
+                        body { padding: 0; background: white; }
+                        .invoice-box { border: 1px solid black; width: 100%; max-width: none; }
+                        .no-print { display: none !important; }
+                    }
+                </style>
+                
+                <div class="invoice-box">
+                    <!-- Header -->
+                    <div class="header-section">
+                        <!-- Left: Seller -->
+                        <div class="seller-col">
+                            <div class="company-name text-uppercase">${business.company_name || 'My Company'}</div>
+                            <div class="p-1">
+                                <div>${business.address_line1 || ''}</div>
+                                <div>${business.address_line2 || ''}</div>
+                                <div class="fw-bold mt-1">Ph: ${business.phone || ''}</div>
+                                <div class="mt-1">
+                                    <span class="fw-bold">GSTIN:</span> ${business.gst_number || '-'} &nbsp;&nbsp;
+                                    <span class="fw-bold">D.L.No:</span> - 
+                                </div>
+                                <div><span class="fw-bold">State:</span> MAHARASHTRA &nbsp;&nbsp; <span class="fw-bold">Code:</span> 27</div>
+                            </div>
                         </div>
-                        <div class="col-6">
-                            <strong>Customer:</strong> ${bill.customer_name}<br>
-                            <strong>Phone:</strong> ${bill.customer_phone || 'N/A'}<br>
-                            <strong>Address:</strong> ${bill.customer_address || 'N/A'}
+                        
+                        <!-- Right: Buyer -->
+                        <div class="buyer-col">
+                            <div class="fw-bold border-bottom mb-2 pb-1">Details of Receiver (Billed To)</div>
+                            <div class="fw-bold text-uppercase">${bill.customer_name}</div>
+                            <div style="max-width: 70%; font-size: 10px;">
+                                ${bill.customer_address || ''}<br>
+                                ${bill.customer_phone ? 'Ph: ' + bill.customer_phone : ''}
+                            </div>
+                            <div class="mt-1" style="font-size: 10px;">
+                                <span class="fw-bold">D.L.No:</span> - <br>
+                                <span class="fw-bold">GSTIN:</span> - <br>
+                                <span class="fw-bold">State:</span> ${bill.customer_state || 'MAHARASHTRA'}
+                            </div>
+
+                            <div class="invoice-meta">
+                                <span class="invoice-type">TAX INVOICE</span>
+                                <table style="font-size: 11px; margin-left: auto;">
+                                    <tr>
+                                        <td class="text-right fw-bold pe-2">INV.NO.:</td>
+                                        <td class="text-right fw-bold">INV ${bill.bill_number}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right fw-bold pe-2">INV.DT.:</td>
+                                        <td class="text-right">${bill.date ? bill.date.split(' ')[0] : '-'}</td>
+                                    </tr>
+                                    ${bill.payment_mode ? `
+                                    <tr>
+                                        <td class="text-right fw-bold pe-2">Mode:</td>
+                                        <td class="text-right text-uppercase">${bill.payment_mode}</td>
+                                    </tr>` : ''}
+                                </table>
+                            </div>
                         </div>
                     </div>
 
-                    <table class="table">
+                    <!-- Table -->
+                                        <table class="items-table">
                         <thead>
                             <tr>
-                                <th>Item</th>
-                                <th>Quantity</th>
-                                <th>Price</th>
-                                <th>Total</th>
+                                <th class="col-hsn">HSN</th>
+                                <th class="col-prod text-left" style="text-align: left;">Product</th>
+                                <th class="col-pack">Pack</th>
+                                <th class="col-batch">Batch</th>
+                                <th class="col-exp">Exp.</th>
+                                <th class="col-qty text-right">Qty</th>
+                                <th class="text-right">Rate</th>
+                                <th class="text-right" style="width: 50px;">Taxable</th>
+                                ${(() => {
+                                    const hasIGST = bill.items.some(i => parseFloat(i.igst_amount) > 0);
+                                    if(hasIGST) {
+                                        return `<th class="text-right" style="width: 30px;">IGST%</th><th class="text-right" style="width: 40px;">Amt</th>`;
+                                    } else {
+                                        return `<th class="text-center" style="width: 25px;">C%</th><th class="text-right" style="width: 35px;">Amt</th><th class="text-center" style="width: 25px;">S%</th><th class="text-right" style="width: 35px;">Amt</th>`;
+                                    }
+                                })()}
+                                <th class="col-amt text-right">Total</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${bill.items.map(item => `
+                            ${bill.items.map(item => {
+                                const taxable = parseFloat(item.price) * parseFloat(item.quantity);
+                                const totalIGST = bill.items.reduce((s, i) => s + parseFloat(i.igst_amount||0), 0);
+                                const isBillIGST = totalIGST > 0;
+
+                                let taxCols = '';
+                                if(isBillIGST) {
+                                    taxCols = `
+                                        <td class="text-right">${parseFloat(item.igst_rate||0).toFixed(0)}%</td>
+                                        <td class="text-right">${parseFloat(item.igst_amount||0).toFixed(2)}</td>
+                                    `;
+                                } else {
+                                    taxCols = `
+                                        <td class="text-center">${parseFloat(item.cgst_rate||item.gst_rate/2||0).toFixed(0)}%</td>
+                                        <td class="text-right">${parseFloat(item.cgst_amount||0).toFixed(2)}</td>
+                                        <td class="text-center">${parseFloat(item.sgst_rate||item.gst_rate/2||0).toFixed(0)}%</td>
+                                        <td class="text-right">${parseFloat(item.sgst_amount||0).toFixed(2)}</td>
+                                    `;
+                                }
+
+                                return `
                                 <tr>
-                                    <td>${item.product_name}</td>
-                                    <td>${item.quantity}</td>
-                                    <td>₹${parseFloat(item.price).toFixed(2)}</td>
-                                    <td>₹${parseFloat(item.total_price).toFixed(2)}</td>
+                                    <td>${item.hsn_number || ''}</td>
+                                    <td class="fw-bold">${item.product_name}</td>
+                                    <td class="text-center">${item.unit || ''}</td>
+                                    <td>${item.batch_number || ''}</td>
+                                    <td class="text-center">${item.expiry_date ? item.expiry_date.substring(0,7) : ''}</td>
+                                    <td class="text-right fw-bold">${parseFloat(item.quantity)}</td>
+                                    <td class="text-right">${parseFloat(item.price).toFixed(2)}</td>
+                                    <td class="text-right text-muted">${taxable.toFixed(2)}</td>
+                                    ${taxCols}
+                                    <td class="text-right fw-bold">${parseFloat(item.total_price).toFixed(2)}</td>
                                 </tr>
-                            `).join('')}
+                                `;
+                            }).join('')}
+                            
+                            <!-- Filler Rows -->
+                            ${[...Array(Math.max(0, 5 - bill.items.length))].map(() => {
+                                const totalIGST = bill.items.reduce((s, i) => s + parseFloat(i.igst_amount||0), 0);
+                                const isBillIGST = totalIGST > 0;
+                                const span = isBillIGST ? 2 : 4;
+                                return `<tr style="height: 18px;">
+                                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                                    <td colspan="${span}"></td>
+                                    <td></td>
+                                </tr>`;
+                            }).join('')}
                         </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="3" class="text-end"><strong>Total Amount:</strong></td>
-                                <td>₹${parseFloat(bill.total_amount).toFixed(2)}</td>
-                            </tr>
-                            <tr>
-                                <td colspan="3" class="text-end"><strong>Discount:</strong></td>
-                                <td>₹${parseFloat(bill.discount).toFixed(2)}</td>
-                            </tr>
-                            <tr>
-                                <td colspan="3" class="text-end"><strong>Final Amount:</strong></td>
-                                <td>₹${parseFloat(bill.final_amount).toFixed(2)}</td>
-                            </tr>
-                        </tfoot>
                     </table>
 
-                    <div class="mt-4">
-                        <p class="text-center">Thank you for your business!</p>
+                    <!-- Footer -->
+                    <div class="footer-section border-top" style="border-top: 1px solid black;">
+                        <div class="d-flex align-top gap-3">
+                             <div id="qrcode-box" class="qr-placeholder"></div>
+                             <div style="font-size: 10px;">
+                                <div class="fw-bold">Terms & Conditions:</div>
+                                <ol style="padding-left: 15px; margin: 2px 0;">
+                                    ${business.terms_and_conditions && business.terms_and_conditions.length
+            ? business.terms_and_conditions.slice(0, 2).map(t => `<li>${t}</li>`).join('')
+            : '<li>Goods once sold will not be taken back.</li><li>Disputes subject to local jurisdiction.</li>'}
+                                </ol>
+                             </div>
+                        </div>
+                        
+                        <div style="min-width: 200px;">
+                            <div class="d-flex justify-content-between border-bottom p-1">
+                                <span>Sub Total:</span>
+                                <span>${parseFloat(bill.total_amount).toFixed(2)}</span>
+                            </div>
+                            <!-- Added Taxable Amount -->
+                            <div class="d-flex justify-content-between border-bottom p-1">
+                                <span>Taxable Amount:</span>
+                                <span>${bill.items.reduce((sum, item) => sum + (parseFloat(item.price) * parseFloat(item.quantity)), 0).toFixed(2)}</span>
+                            </div>
+                            <!-- Tax Breakdown -->
+                            ${(() => {
+                                const totalCGST = bill.items.reduce((sum, item) => sum + parseFloat(item.cgst_amount || 0), 0);
+                                const totalSGST = bill.items.reduce((sum, item) => sum + parseFloat(item.sgst_amount || 0), 0);
+                                const totalIGST = bill.items.reduce((sum, item) => sum + parseFloat(item.igst_amount || 0), 0);
+                                
+                                let taxHtml = '';
+                                if(totalIGST > 0) {
+                                    taxHtml += `<div class="d-flex justify-content-between border-bottom p-1">
+                                        <span>IGST:</span> <span>${totalIGST.toFixed(2)}</span>
+                                    </div>`;
+                                } else {
+                                    if(totalCGST > 0) taxHtml += `<div class="d-flex justify-content-between border-bottom p-1">
+                                        <span>CGST:</span> <span>${totalCGST.toFixed(2)}</span>
+                                    </div>`;
+                                    if(totalSGST > 0) taxHtml += `<div class="d-flex justify-content-between border-bottom p-1">
+                                        <span>SGST:</span> <span>${totalSGST.toFixed(2)}</span>
+                                    </div>`;
+                                }
+                                return taxHtml;
+                            })()}
+                             ${bill.discount > 0 ? `
+                            <div class="d-flex justify-content-between border-bottom p-1">
+                                <span>Discount:</span>
+                                <span>-${parseFloat(bill.discount).toFixed(2)}</span>
+                            </div>` : ''}
+                            
+                            <div class="d-flex justify-content-between p-1 total-box bg-light" style="background: #eee;">
+                                <span>Grand Total:</span>
+                                <span>${parseFloat(bill.final_amount).toFixed(2)}</span>
+                            </div>
+                            
+                            <div class="mt-4 text-center">
+                                ${business.signature_url ? `<img src="${business.signature_url}" style="height: 30px;">` : '<div style="height:30px;"></div>'}
+                                <div class="fw-bold border-top" style="border-top: 1px solid black; padding-top: 2px;">Authorized Signatory</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            `;
+             `;
+
+    document.getElementById('billDetails').innerHTML = html;
+
+    if (business.upi_id) {
+        setTimeout(() => {
+            document.getElementById('qrcode-box').innerHTML = "";
+            new QRCode(document.getElementById('qrcode-box'), {
+                text: `upi://pay?pa=${business.upi_id}&pn=${business.company_name}&am=${bill.final_amount}&tr=${bill.bill_number}`,
+                width: 78, height: 78
+            });
+        }, 100);
+    }
+}
+
+
+        // --- Payment Update (Reused) ---
+        function updatePaymentStatus(billId, currentStatus, currentPaid) {
+            document.getElementById('updateBillId').value = billId;
+            document.getElementById('updateStatus').value = currentStatus;
+            document.getElementById('updatePaidAmount').value = currentPaid;
+            document.getElementById('securityPassword').value = '';
+            
+            // Set date to today if not set
+            document.getElementById('updatePaymentDate').valueAsDate = new Date();
+            
+            handleUpdateStatusChange();
+            new bootstrap.Modal(document.getElementById('updatePaymentModal')).show();
         }
 
-        function printBillDetails(billId) {
-            viewBill(billId);
-            setTimeout(() => {
-                window.print();
-            }, 1000);
+        function handleUpdateStatusChange() {
+            const status = document.getElementById('updateStatus').value;
+            const detailsDiv = document.getElementById('updatePaymentDetails');
+            const paidAmtDiv = document.getElementById('updatePaidAmountContainer');
+            
+            if (status === 'Pending') {
+                detailsDiv.style.display = 'none';
+            } else {
+                detailsDiv.style.display = 'block';
+                if (status === 'Partially Paid') {
+                    paidAmtDiv.style.display = 'block';
+                } else {
+                    paidAmtDiv.style.display = 'none';
+                }
+            }
         }
+
+        function submitPaymentUpdate() {
+            const billId = document.getElementById('updateBillId').value;
+            const status = document.getElementById('updateStatus').value;
+            const password = document.getElementById('securityPassword').value;
+            
+            if (!password) {
+                alert('Please enter security password');
+                return;
+            }
+
+            const data = {
+                status: status,
+                password: password,
+                mode: document.getElementById('updatePaymentMode').value,
+                date: document.getElementById('updatePaymentDate').value,
+                paid_amount: status === 'Partially Paid' ? document.getElementById('updatePaidAmount').value : null
+            };
+
+            fetch(`/billing/update-payment-status/${billId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('updatePaymentModal')).hide();
+                    searchBills(); // Refresh
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(err => alert('Failed to update'));
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
     </script>
 </body>
-</html> 
+</html>

@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Product, Category, Unit
+from genrate_bill.models import BusinessInformation
 from .forms import ProductForm, UpdateProductForm, CategoryForm, UnitForm
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST, require_http_methods
@@ -23,7 +24,7 @@ def billing_page(request):
 
 def Manage_inventory(request):
     form = ProductForm()
-    products = Product.objects.all().order_by('-id')
+    products = Product.objects.select_related('category', 'unit').all().order_by('-id')
     categories = Category.objects.all()
     units = Unit.objects.all()
     
@@ -32,7 +33,8 @@ def Manage_inventory(request):
         "products": products,
         "categories": categories,
         "units": units,
-        "active_tab": request.GET.get('tab', 'add-product')
+        "active_tab": request.GET.get('tab', 'add-product'),
+        "business_info": BusinessInformation.get_business_info()
     }
     
     if request.method == 'POST':
@@ -48,7 +50,8 @@ def Manage_inventory(request):
                     context['error'] = f"Error saving product: {str(e)}"
                     context['active_tab'] = 'update-product'
             else:
-                context['error'] = f"Invalid form data: {form.errors}"
+                error_messages = [f"{field}: {error[0]}" for field, error in form.errors.items()]
+                context['error'] = f"Invalid form data: {', '.join(error_messages)}"
                 context['active_tab'] = 'update-product'
         else:  # Add new product
             form = ProductForm(request.POST)
@@ -60,7 +63,8 @@ def Manage_inventory(request):
                 except Exception as e:
                     context['error'] = f"Error saving product: {str(e)}"
             else:
-                context['error'] = f"Invalid form data: {form.errors}"
+                error_messages = [f"{field}: {error[0]}" for field, error in form.errors.items()]
+                context['error'] = f"Invalid form data: {', '.join(error_messages)}"
 
     return render(request, 'inventory/inventory_dashboard.html', context)
 
@@ -82,7 +86,16 @@ def product_details(request, product_id):
             } if product.unit else None,
             "dealer_price": float(product.dealer_price),
             "selling_price": float(product.selling_price),
+            "mrp": float(product.mrp),
             "quantity": float(product.quantity),
+            "gst_rate": float(product.gst_rate),
+            "igst": float(product.igst),
+            "cgst": float(product.cgst),
+            "sgst": float(product.sgst),
+            "batch_number": product.batch_number,
+            "hsn_number": product.hsn_number,
+            "mfg_date": product.mfg_date.strftime("%Y-%m-%d") if product.mfg_date else None,
+            "expiry_date": product.expiry_date.strftime("%Y-%m-%d") if product.expiry_date else None,
             "minimum_stock": float(product.minimum_stock),
             "show_product": product.show_product,
             "stock_status": product.stock_status,
@@ -121,6 +134,15 @@ def search_product(request):
                 "unit": p.unit.symbol if p.unit else None,
                 "dealer_price": float(p.dealer_price),
                 "selling_price": float(p.selling_price),
+                "mrp": float(p.mrp),
+                "gst_rate": float(p.gst_rate),
+                "igst": float(p.igst),
+                "cgst": float(p.cgst),
+                "sgst": float(p.sgst),
+                "batch_number": p.batch_number,
+                "hsn_number": p.hsn_number,
+                "mfg_date": p.mfg_date.strftime("%Y-%m-%d") if p.mfg_date else None,
+                "expiry_date": p.expiry_date.strftime("%Y-%m-%d") if p.expiry_date else None,
                 "quantity": float(p.quantity),
                 "minimum_stock": float(p.minimum_stock),
                 "show_product": p.show_product,

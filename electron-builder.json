@@ -1,0 +1,70 @@
+{
+  "appId": "com.yourcompany.billing-system",
+  "productName": "Billing System",
+  "directories": {
+    "output": "dist"
+  },
+  "files": [
+    "electron/**/*",
+    "bill_maker/**/*",
+    "genrate_bill/**/*",
+    "inventory/**/*",
+    "manage.py",
+    "db.sqlite3",
+    "requirements.txt",
+    "!**/__pycache__/**/*",
+    "!**/migrations/**/*.pyc"
+  ],
+  "extraResources": [
+    {
+      "from": ".",
+      "to": "app",
+      "filter": [
+        "bill_maker/**/*",
+        "genrate_bill/**/*",
+        "inventory/**/*",
+        "manage.py",
+        "db.sqlite3",
+        "requirements.txt"
+      ]
+    }
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "assets/icon.ico",
+    "requestedExecutionLevel": "asInvoker"
+  },
+  "mac": {
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["x64", "arm64"]
+      }
+    ],
+    "icon": "assets/icon.icns",
+    "category": "public.app-category.business"
+  },
+  "linux": {
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "assets/icon.png",
+    "category": "Office"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Billing System"
+  }
+}
+

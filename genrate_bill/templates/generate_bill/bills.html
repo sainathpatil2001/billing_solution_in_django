@@ -160,12 +160,14 @@
         }
 
         function generateBillHTML(bill) {
+            const business = bill.business_info || {};
             return `
                 <div class="bill-content">
                     <div class="text-center mb-4">
-                        <h3>Your Company Name</h3>
-                        <p>Address Line 1, Address Line 2</p>
-                        <p>Phone: +1234567890 | Email: example@email.com</p>
+                        <h3>${business.company_name || 'Your Company Name'}</h3>
+                        <p>${business.address_line1 || 'Address Line 1'}${business.address_line2 ? ', ' + business.address_line2 : ''}</p>
+                        <p>Phone: ${business.phone || '+1234567890'} | Email: ${business.email || 'example@email.com'}</p>
+                        ${business.gst_number ? `<p>GST: ${business.gst_number}</p>` : ''}
                     </div>
                     
                     <div class="row mb-3">

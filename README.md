@@ -1,68 +1,110 @@
-# 🧾 Online Billing Solution — Django Web App for Grocery Businesses
+# Billing Solution in Django
 
-**An intuitive, lightweight billing and inventory system built using Django — designed for grocery shops and crafted to demonstrate full-stack web development skills.**
+A robust and efficient Billing and Inventory Management System designed for local businesses (e.g., Kirana stores, Grocery shops, Retail outlets). This web application simplifies the process of generating bills, managing inventory, tracking payments, and maintaining business records. It can be run as a standard Django web application or as a desktop application using Electron.
 
----
+## Key Features
 
-## 🚀 Project Overview
+### 🧾 Billing & Invoicing
+*   **Fast Bill Generation**: Create professional invoices quickly for customers.
+*   **Tax Compliance**: Automated calculation of GST (CGST, SGST, IGST) based on product settings.
+*   **Payment Tracking**: Support for multiple payment statuses ('Paid', 'Pending', 'Partially Paid') and modes ('Cash', 'Online').
+*   **Discount Management**: Apply discounts directly to bills.
+*   **Bill History**: Search, view, and manage past bills.
+*   **Print Support**: Printer-friendly bill layouts.
 
-This project is a complete **Online Billing System** tailored for a **grocery store business**, built using Django and Bootstrap. It covers the core functionalities required to run a small-to-medium business efficiently, with a focus on billing, stock management, and product categorization.
+### 📦 Inventory Management
+*   **Product Tracking**: Manage products with details like Name, Category, Unit, Prices (Dealer/Selling), and MRP.
+*   **Stock Monitoring**: Real-time tracking of stock levels with status indicators ("In Stock", "Low Stock", "Out of Stock").
+*   **Batch & Expiry**: Track products by Batch Number, Manufacturing Date, and Expiry Date.
+*   **Barcode/HSN**: Support for HSN numbers for tax regulation.
+*   **Category & Unit Management**: Organize products into categories and define custom units (kg, pc, liter, etc.).
 
-> 💡 This project was created to showcase my skills as a full-stack Python/Django developer and demonstrate my ability to solve real-world business problems through code.
+### ⚙️ Business Administration
+*   **Profile Management**: Configure business details, address, phone, email, and GST number.
+*   **Customization**: Upload Business Logo and Authorized Signature for bills.
+*   **Payment Details**: Display UPI ID and custom Terms & Conditions on invoices.
+*   **Security**: Password protection for sensitive settings.
 
----
+### 💾 Data Management & Security
+*   **Backup & Restore**: Built-in functionality to create ZIP backups of the database and media files, and easy restoration process.
+*   **Activation System**: License key management system for controlling application access/validity duration.
 
-## 🛠️ Tech Stack
+### 🖥️ Desktop Experience
+*   **Electron Integration**: Includes an Electron shell to run the Django app as a native-like desktop application.
 
-- **Backend**: Python · Django · SQLite
-- **Frontend**: HTML · CSS · JavaScript · Bootstrap
-- **Database**: SQLite (default Django ORM)
+## Technology Stack
 
----
+*   **Backend**: Django 4.2 (Python)
+*   **Frontend**: HTML5, CSS3, JavaScript
+*   **Database**: SQLite (Default, scalable to PostgreSQL/MySQL)
+*   **Imaging**: Pillow (for handling logos/signatures)
+*   **Desktop Wrapper**: Electron JS
 
-## ✨ Key Features
+## Installation & Setup
 
-- ✅ **Generate & Print Bills** — Create, save, and print professional bills in real time.
-- 📦 **Smart Inventory Tracking** — Auto-updates stock levels when a bill is created.
-- 🧠 **Product Search & Add-to-Bill** — Dynamic search to quickly add products while billing.
-- 🏷️ **Custom Categories & Units** — Add custom-made categories and measurement units easily.
-- 📥 **Add Inventory Products** — With flexible data entry by data feeders.
-- 📊 **View & Manage Saved Bills** — Quickly reference previous transactions.
-- 🔍 **Efficient UI** — Clean Bootstrap-powered layout for a smooth user experience.
+### Prerequisites
+*   Python 3.8 or higher installed.
+*   Node.js (optional, only for Electron Desktop App).
 
-> 💎 **Special Feature**: You can add categories and units on the fly using a "data feeder" approach — perfect for businesses with diverse product types.
-
----
-
-## 🧪 Authentication & Access
-
-This app is currently **open access** for demo and testing purposes — no login required.
-
----
-
-## 🖼️ Screenshots
-
-> _Add screenshots here (optional but recommended for visual impact)_  
-> (Place your images in a `/screenshots` folder and link like `![Screenshot](screenshots/main-page.png)`)
-
----
-
-## 🧰 How to Run Locally
-
-> ⚠️ Make sure Python and Django are installed on your system.
-
+### 1. Clone or Download the Repository
 ```bash
-# 1. Clone the repository
-git clone https://github.com/your-username/your-repo-name.git
+git clone <repository_url>
+cd "Billing Platform webapp/billing_solution_in_django"
+```
 
-# 2. Navigate into the project folder
-cd your-repo-name
+### 2. Set Up Virtual Environment (Recommended)
+```bash
+# Windows
+python -m venv venv
+.\venv\Scripts\activate
 
-# 3. Install dependencies (if any)
+# Linux/Mac
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install Python Dependencies
+```bash
 pip install -r requirements.txt
+```
 
-# 4. Run the migrations
+### 4. Database Migrations
+Initialize the database tables:
+```bash
+python manage.py make migrations
 python manage.py migrate
+```
 
-# 5. Start the development server
+### 5. Run the Web Server
+```bash
 python manage.py runserver
+```
+Access the application at: `http://127.0.0.1:8000/`
+
+## Running as Desktop App (Electron)
+
+If you prefer a desktop application experience:
+
+1.  Ensure **Node.js** and **npm** are installed.
+2.  Navigate to the `electron` directory (or root if package.json is there).
+3.  Install dependencies:
+    ```bash
+    npm install
+    ```
+4.  Start the application (this usually starts the Django server and the Electron window):
+    ```bash
+    npm start
+    ```
+    *(Refer to `README-ELECTRON.md` for specific desktop app build instructions)*
+
+## Project Structure
+
+*   `genrate_bill/`: Core billing logic, bill views, and business settings.
+*   `inventory/`: Product, category, and unit management.
+*   `bill_maker/`: Main project settings and configuration.
+*   `templates/`: HTML templates for the UI.
+*   `static/`: CSS, JS, and static assets.
+*   `media/`: User-uploaded content (Logos, Signatures).
+
+## License
+[License Name/Type]

@@ -1,0 +1,541 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Settings - MediBill Pro</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary-bg: #f3f4f6;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #e2e8f0;
+            --accent-color: #3b82f6;
+            --card-bg: #ffffff;
+            --font-family: 'Inter', sans-serif;
+            --border-color: #e5e7eb;
+            --primary-color: #4361ee;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--primary-bg);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar (Shared) */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            flex-shrink: 0;
+        }
+
+        .brand-section {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .brand-logo {
+            width: 32px; height: 32px;
+            background: var(--accent-color);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.2rem;
+        }
+
+        .brand-text { font-weight: 600; font-size: 1.1rem; letter-spacing: 0.5px; }
+
+        .nav-menu {
+            flex: 1;
+            padding: 1.5rem 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: #94a3b8; text-decoration: none;
+            border-radius: 8px; transition: all 0.2s; font-weight: 500;
+        }
+
+        .nav-item:hover, .nav-item.active { background-color: rgba(255,255,255,0.1); color: white; }
+        .nav-item.active { background-color: var(--accent-color); }
+        .nav-item i { font-size: 1.2rem; }
+
+        .user-section {
+            padding: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.2);
+        }
+
+        .business-badge-sidebar {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.5rem; border-radius: 8px;
+        }
+        
+        .business-logo-mini {
+            width: 36px; height: 36px; border-radius: 50%; background: white; 
+            object-fit: contain; border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .content-scrollable {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            padding-bottom: 3rem;
+        }
+        
+        /* Settings Specifics */
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            height: 100%;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .section-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            display: flex; align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .section-icon {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            background: #eff6ff;
+            color: var(--accent-color);
+            display: flex; align-items: center; justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .section-title { margin: 0; font-weight: 700; font-size: 1rem; color: #1e293b; }
+
+        .form-label {
+            font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.35rem;
+        }
+        
+        .form-control, .form-select {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+            font-size: 0.9rem;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        .logo-preview-box {
+            width: 100%; height: 100px;
+            border: 2px dashed #cbd5e1; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            background: #f8fafc;
+            margin-top: 0.5rem; overflow: hidden;
+        }
+
+        .app-branding {
+            position: absolute; bottom: 5px; right: 15px; font-size: 0.7rem; 
+            color: #cbd5e1; pointer-events: none; z-index: 100;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Desktop Sidebar -->
+    <div class="sidebar">
+        <div class="brand-section">
+            <div class="brand-logo"><i class="bi bi-wallet2"></i></div>
+            <div class="brand-text">MediBill Pro</div>
+        </div>
+        <div class="nav-menu">
+            <a href="/billing/" class="nav-item">
+                <i class="bi bi-receipt-cutoff"></i><span>New Invoice</span>
+            </a>
+            <a href="/billing/bills/" class="nav-item">
+                <i class="bi bi-clock-history"></i><span>History & Search</span>
+            </a>
+            <a href="/inventory/inventory_management/" class="nav-item">
+                <i class="bi bi-box-seam"></i><span>Inventory</span>
+            </a>
+            <a href="/billing/backup/" class="nav-item">
+                <i class="bi bi-database-check"></i><span>Backup & Restore</span>
+            </a>
+            <a href="/billing/business-settings/" class="nav-item active">
+                <i class="bi bi-gear"></i><span>Settings</span>
+            </a>
+        </div>
+        <div class="user-section">
+             <div class="business-badge-sidebar">
+                {% if business_info.logo %}
+                <img src="{{ business_info.logo.url }}" alt="Logo" class="business-logo-mini">
+                {% else %}
+                <div class="business-logo-mini d-flex align-items-center justify-content-center text-primary fw-bold">
+                    {{ business_info.company_name|slice:":1" }}
+                </div>
+                {% endif %}
+                <div class="d-flex flex-column text-truncate">
+                    <span class="small fw-bold text-white text-truncate">{{ business_info.company_name|default:"My Business" }}</span>
+                    <span class="small text-muted" style="font-size: 0.7rem;">Config</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-scrollable">
+            <form id="businessForm">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <h4 class="fw-bold m-0 text-dark">Business Configuration</h4>
+                        <span class="text-muted small">Manage your company details and system preferences</span>
+                    </div>
+                    <div>
+                         <button type="submit" class="btn btn-primary px-4 fw-bold">
+                            <i class="bi bi-check-lg me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Company Profile -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-icon"><i class="bi bi-building"></i></div>
+                                <h5 class="section-title">Company Profile</h5>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Company Name *</label>
+                                <input type="text" class="form-control" name="company_name" value="{{ business_info.company_name }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Address</label>
+                                <input type="text" class="form-control mb-2" name="address_line1" value="{{ business_info.address_line1 }}" placeholder="Line 1" required>
+                                <input type="text" class="form-control" name="address_line2" value="{{ business_info.address_line2 }}" placeholder="Line 2 (Optional)">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Company Logo</label>
+                                <input type="file" class="form-control form-control-sm" name="logo" accept="image/*" onchange="previewImage(this, 'logoPreview')">
+                                <div class="logo-preview-box">
+                                    {% if business_info.logo %}
+                                        <img src="{{ business_info.logo.url }}" id="logoPreview" style="max-height: 80px; max-width: 90%;">
+                                    {% else %}
+                                        <span class="text-muted small" id="logoPlaceholder">Upload Logo</span>
+                                        <img id="logoPreview" style="display: none; max-height: 80px; max-width: 90%;">
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Details -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-icon"><i class="bi bi-person-lines-fill"></i></div>
+                                <h5 class="section-title">Contact & Tax</h5>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" name="phone" value="{{ business_info.phone }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" name="email" value="{{ business_info.email }}" required>
+                            </div>
+                             <div class="mb-3">
+                                <label class="form-label">GSTIN / Tax ID</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-file-earmark-text"></i></span>
+                                    <input type="text" class="form-control border-start-0 ps-0" name="gst_number" value="{{ business_info.gst_number }}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Website</label>
+                                <input type="url" class="form-control" name="website" value="{{ business_info.website }}" placeholder="https://">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment & Security -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="section-card">
+                             <div class="section-header">
+                                <div class="section-icon"><i class="bi bi-shield-lock"></i></div>
+                                <h5 class="section-title">Payments & Security</h5>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Admin Security Password</label>
+                                <input type="password" class="form-control" name="security_password" value="{{ business_info.security_password|default:'1234' }}">
+                                <div class="form-text small">Required for critical actions like editing payments.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">UPI ID (QR Payment)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-end-0">@</span>
+                                    <input type="text" class="form-control border-start-0 ps-0" name="upi_id" value="{{ business_info.upi_id }}" placeholder="merchant@upi">
+                                </div>
+                            </div>
+                             <div class="mb-3">
+                                <label class="form-label">Digital Signature</label>
+                                <input type="file" class="form-control form-control-sm" name="signature" accept="image/*" onchange="previewImage(this, 'sigPreview')">
+                                <div class="logo-preview-box" style="height: 70px;">
+                                    {% if business_info.signature %}
+                                        <img src="{{ business_info.signature.url }}" id="sigPreview" style="max-height: 50px; max-width: 90%;">
+                                    {% else %}
+                                        <span class="text-muted small" id="sigPlaceholder">Upload Signature</span>
+                                        <img id="sigPreview" style="display: none; max-height: 50px; max-width: 90%;">
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- License Info -->
+                    <div class="col-lg-6 col-md-6">
+                        <div class="section-card">
+                             <div class="section-header">
+                                <div class="section-icon"><i class="bi bi-key"></i></div>
+                                <h5 class="section-title">License & Support</h5>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between mb-3 p-3 bg-light rounded border">
+                                <div>
+                                    <h6 class="fw-bold m-0"><i class="bi bi-patch-check-fill text-success me-2"></i>Software Status</h6>
+                                    <div class="small text-muted mt-1">
+                                         {% if days_remaining > 0 %}License valid for <strong>{{ days_remaining }} days</strong>{% else %}License Expired{% endif %}
+                                    </div>
+                                </div>
+                                <div>
+                                    {% if is_expired %}
+                                        <span class="badge bg-danger">Expired</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Extend License</label>
+                                <div class="input-group">
+                                    <input type="text" id="extendKey" class="form-control" placeholder="Enter Product Key">
+                                    <button class="btn btn-outline-primary" type="button" onclick="extendLicense()">Validate</button>
+                                </div>
+                            </div>
+                            <div class="small text-muted border-top pt-3 mt-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>Support Contact:</span> <strong>7219585666 (Sainath Patil)</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                            <textarea class="form-control font-monospace" name="terms_and_conditions" rows="3" placeholder="Enter standard terms...">{{ business_info.terms_and_conditions }}</textarea>
+                            <div class="form-text">These will appear at the bottom of every invoice.</div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="app-branding">
+           MediBill Pro v2.0
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-check-circle-fill me-2"></i> <span id="successMessage">Success</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                 <div class="toast-body">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i> <span id="errorMessage">Error</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Form Submission
+        document.getElementById('businessForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+            btn.disabled = true;
+
+            const formData = new FormData(this);
+            fetch('/billing/business-settings/', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) showToast('success', data.message);
+                else showToast('error', data.error || 'Failed to save');
+            })
+            .catch(err => showToast('error', 'Network error'))
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        });
+
+        // Image Preview
+        function previewImage(input, previewId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById(previewId);
+                    const placeholder = document.getElementById(previewId === 'logoPreview' ? 'logoPlaceholder' : 'sigPlaceholder');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    if(placeholder) placeholder.style.display = 'none';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // License
+        function extendLicense() {
+            const key = document.getElementById('extendKey').value;
+            if(!key) return showToast('error', 'Enter a key');
+            
+            fetch('/billing/activate-license/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ key })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    showToast('success', data.message);
+                    setTimeout(() => window.location.reload(), 1500);
+                } else showToast('error', data.error);
+            });
+        }
+
+        // Backup
+        function downloadBackup() {
+            window.location.href = "{% url 'create_backup' %}";
+            showToast('success', 'Backup started...');
+        }
+
+        function restoreBackup() {
+            const input = document.getElementById('restoreFile');
+            if(!input.files.length) return;
+            
+            if(!confirm('WARNING: Overwrite all data with backup?')) {
+                input.value = ''; // clear selection
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('backup_file', input.files[0]);
+
+            fetch("{% url 'restore_backup' %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    showToast('success', 'Restored successfully! Reloading...');
+                    setTimeout(() => window.location.reload(), 2000);
+                } else showToast('error', data.error);
+            })
+            .catch(err => showToast('error', 'Restore failed'));
+        }
+
+        function saveBackupSettings() {
+            const days = document.getElementById('backupReminderDays').value;
+             fetch("{% url 'update_backup_settings' %}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ days })
+            })
+            .then(res => res.json())
+            .then(data => { if(data.success) showToast('success', 'Settings saved'); });
+        }
+
+        // Utils
+        function showToast(type, msg) {
+            document.getElementById(type === 'success' ? 'successMessage' : 'errorMessage').textContent = msg;
+            new bootstrap.Toast(document.getElementById(type === 'success' ? 'successToast' : 'errorToast'), { delay: 3000 }).show();
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

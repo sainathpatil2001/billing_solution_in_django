@@ -27,52 +27,5 @@
     "electron-builder": "^24.6.4",
     "concurrently": "^8.2.2",
     "wait-on": "^7.2.0"
-  },
-  "build": {
-    "appId": "com.yourcompany.billing-system",
-    "productName": "Billing System",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "electron/**/*",
-      "bill_maker/**/*",
-      "genrate_bill/**/*",
-      "inventory/**/*",
-      "manage.py",
-      "db.sqlite3",
-      "requirements.txt"
-    ],
-    "extraResources": [
-      {
-        "from": ".",
-        "to": "app",
-        "filter": [
-          "bill_maker/**/*",
-          "genrate_bill/**/*",
-          "inventory/**/*",
-          "manage.py",
-          "db.sqlite3",
-          "requirements.txt"
-        ]
-      }
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": "assets/icon.ico"
-    },
-    "mac": {
-      "target": "dmg",
-      "icon": "assets/icon.icns"
-    },
-    "linux": {
-      "target": "AppImage",
-      "icon": "assets/icon.png"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
   }
 }
-

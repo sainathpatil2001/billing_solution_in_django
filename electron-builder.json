@@ -6,44 +6,34 @@
   },
   "files": [
     "electron/**/*",
-    "bill_maker/**/*",
-    "genrate_bill/**/*",
-    "inventory/**/*",
-    "manage.py",
-    "db.sqlite3",
-    "requirements.txt",
     "!**/__pycache__/**/*",
     "!**/migrations/**/*.pyc"
   ],
   "extraResources": [
     {
-      "from": ".",
-      "to": "app",
-      "filter": [
-        "bill_maker/**/*",
-        "genrate_bill/**/*",
-        "inventory/**/*",
-        "manage.py",
-        "db.sqlite3",
-        "requirements.txt"
-      ]
+      "from": "dist-python/django_app",
+      "to": "django_app"
     }
   ],
   "win": {
     "target": [
       {
         "target": "nsis",
-        "arch": ["x64"]
+        "arch": [
+          "x64"
+        ]
       }
     ],
-    "icon": "assets/icon.ico",
     "requestedExecutionLevel": "asInvoker"
   },
   "mac": {
     "target": [
       {
         "target": "dmg",
-        "arch": ["x64", "arm64"]
+        "arch": [
+          "x64",
+          "arm64"
+        ]
       }
     ],
     "icon": "assets/icon.icns",
@@ -53,7 +43,9 @@
     "target": [
       {
         "target": "AppImage",
-        "arch": ["x64"]
+        "arch": [
+          "x64"
+        ]
       }
     ],
     "icon": "assets/icon.png",
@@ -67,4 +59,3 @@
     "shortcutName": "Billing System"
   }
 }
-

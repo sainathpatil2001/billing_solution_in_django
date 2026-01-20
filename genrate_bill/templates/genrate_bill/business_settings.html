@@ -260,6 +260,28 @@
                                 <input type="text" class="form-control mb-2" name="address_line1" value="{{ business_info.address_line1 }}" placeholder="Line 1" required>
                                 <input type="text" class="form-control" name="address_line2" value="{{ business_info.address_line2 }}" placeholder="Line 2 (Optional)">
                             </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">City</label>
+                                    <input type="text" class="form-control" name="city" value="{{ business_info.city }}" placeholder="City">
+                                </div>
+                                <div class="col-md-4">
+                                     <label class="form-label">Pincode</label>
+                                    <input type="text" class="form-control" name="pincode" value="{{ business_info.pincode }}" placeholder="Pincode">
+                                </div>
+                                <div class="col-md-4">
+                                     <label class="form-label">State</label>
+                                    <input type="text" class="form-control" name="state" value="{{ business_info.state }}" placeholder="State">
+                                </div>
+                                <div class="col-md-6">
+                                     <label class="form-label">District</label>
+                                    <input type="text" class="form-control" name="district" value="{{ business_info.district }}" placeholder="District">
+                                </div>
+                                <div class="col-md-6">
+                                     <label class="form-label">Sub District (Taluka)</label>
+                                    <input type="text" class="form-control" name="sub_district" value="{{ business_info.sub_district }}" placeholder="Taluka">
+                                </div>
+                            </div>
                             <div class="mb-3">
                                 <label class="form-label">Company Logo</label>
                                 <input type="file" class="form-control form-control-sm" name="logo" accept="image/*" onchange="previewImage(this, 'logoPreview')">
@@ -376,7 +398,7 @@
                     </div>
 
 
-                            <textarea class="form-control font-monospace" name="terms_and_conditions" rows="3" placeholder="Enter standard terms...">{{ business_info.terms_and_conditions }}</textarea>
+                            <textarea class="form-control font-monospace" name="terms_and_conditions" rows="6" placeholder="Enter standard terms (one per line)...">{{ business_info.terms_and_conditions }}</textarea>
                             <div class="form-text">These will appear at the bottom of every invoice.</div>
                         </div>
                     </div>

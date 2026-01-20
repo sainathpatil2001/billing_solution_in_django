@@ -23,6 +23,11 @@ class BusinessInformation(models.Model):
     address_line2 = models.CharField(max_length=200, blank=True, default="Address Line 2")
     phone = models.CharField(max_length=20, default="+1234567890")
     email = models.EmailField(default="example@email.com")
+    city = models.CharField(max_length=100, default="City")
+    pincode = models.CharField(max_length=20, default="000000")
+    state = models.CharField(max_length=100, default="State")
+    district = models.CharField(max_length=100, default="District")
+    sub_district = models.CharField(max_length=100, default="Taluka")
     gst_number = models.CharField(max_length=20, blank=True)
 
     website = models.URLField(blank=True)
@@ -62,6 +67,7 @@ class Customer(models.Model):
     district = models.CharField(max_length=50, blank=True, null=True)
     sub_district = models.CharField(max_length=50, blank=True, null=True)
     city = models.CharField(max_length=50, blank=True, null=True)
+    gst_number = models.CharField(max_length=20, blank=True, null=True)
     extra_note = models.TextField(blank=True, null=True)
     
     def __str__(self):
@@ -79,6 +85,12 @@ class Bill(models.Model):
     payment_date = models.DateField(null=True, blank=True)
     paid_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     remaining_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Transport / Invoice Details
+    transport_mode = models.CharField(max_length=50, blank=True, null=True)
+    vehicle_number = models.CharField(max_length=50, blank=True, null=True)
+    supply_date = models.DateField(null=True, blank=True)
+    place_of_supply = models.CharField(max_length=100, blank=True, null=True)
     
     def __str__(self):
         return f"Bill #{self.bill_number} - {self.customer.name}"

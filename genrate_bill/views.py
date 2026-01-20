@@ -5,7 +5,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 from inventory.models import Product, Category
 from .models import Customer, Bill, BillItem, BusinessInformation
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 import json
 from django.template.loader import get_template
 from django.template import TemplateDoesNotExist
@@ -45,6 +45,7 @@ def generate_bill(request):
                     state=data['customer'].get('state', ''),
                     pincode=data['customer'].get('pincode', ''),
                     sub_district=data['customer'].get('sub_district', ''),
+                    gst_number=data['customer'].get('gst_number', ''),
                     extra_note=data['customer'].get('extra_note', '')
                 )
                 
@@ -73,14 +74,14 @@ def generate_bill(request):
                     
                     if is_igst:
                          igst_rate = gst_rate
-                         igst_amount = (base_amount * igst_rate) / 100
+                         igst_amount = ((base_amount * igst_rate) / 100).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
                     else:
                          cgst_rate = gst_rate / 2
                          sgst_rate = gst_rate / 2
-                         cgst_amount = (base_amount * cgst_rate) / 100
-                         sgst_amount = (base_amount * sgst_rate) / 100
+                         cgst_amount = ((base_amount * cgst_rate) / 100).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                         sgst_amount = ((base_amount * sgst_rate) / 100).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
                     
-                    item_total = base_amount + cgst_amount + sgst_amount + igst_amount
+                    item_total = (base_amount + cgst_amount + sgst_amount + igst_amount).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
                     total_amount += item_total
                     
                     # Parse dates
@@ -147,6 +148,18 @@ def generate_bill(request):
 
                 payment_date = data.get('payment_date')
                 
+                # Transport Details
+                transport_mode = data.get('transport_mode', '')
+                vehicle_number = data.get('vehicle_number', '')
+                place_of_supply = data.get('place_of_supply', '')
+                supply_date_str = data.get('supply_date', '')
+                supply_date = None
+                if supply_date_str:
+                    try:
+                        supply_date = datetime.strptime(supply_date_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        pass
+                
                 # Create bill with date
                 bill = Bill.objects.create(
                     customer=customer,
@@ -158,7 +171,11 @@ def generate_bill(request):
                     payment_mode=payment_mode,
                     payment_date=payment_date if payment_date else None,
                     paid_amount=paid_amount,
-                    remaining_amount=remaining_amount
+                    remaining_amount=remaining_amount,
+                    transport_mode=transport_mode,
+                    vehicle_number=vehicle_number,
+                    place_of_supply=place_of_supply,
+                    supply_date=supply_date
                 )
                 
                 # Create bill items
@@ -260,8 +277,6 @@ def search_bills(request):
     try:
         bill_number = request.GET.get('bill_number', '')
         customer_name = request.GET.get('customer_name', '')
-        bill_number = request.GET.get('bill_number', '')
-        customer_name = request.GET.get('customer_name', '')
         date_str = request.GET.get('date', '')
         payment_status = request.GET.get('payment_status', '')
 
@@ -349,9 +364,16 @@ def get_bill_details(request, bill_id):
             'customer_name': bill.customer.name if bill.customer else 'N/A',
             'customer_phone': bill.customer.phone if bill.customer else '',
             'customer_address': bill.customer.address if bill.customer else '',
+            'customer_pincode': bill.customer.pincode if bill.customer else '',
+            'customer_sub_district': bill.customer.sub_district if bill.customer else '',
+            'customer_gst_number': bill.customer.gst_number if bill.customer else '',
             'total_amount': str(bill.total_amount),
             'discount': str(bill.discount),
             'final_amount': str(bill.final_amount),
+            'transport_mode': bill.transport_mode or '',
+            'vehicle_number': bill.vehicle_number or '',
+            'place_of_supply': bill.place_of_supply or '',
+            'supply_date': bill.supply_date.strftime('%Y-%m-%d') if bill.supply_date else '',
             'business_info': {
                 'company_name': business_info.company_name,
                 'address_line1': business_info.address_line1,
@@ -359,6 +381,11 @@ def get_bill_details(request, bill_id):
                 'phone': business_info.phone,
                 'email': business_info.email,
                 'gst_number': business_info.gst_number,
+                'city': business_info.city,
+                'pincode': business_info.pincode,
+                'state': business_info.state,
+                'district': business_info.district,
+                'sub_district': business_info.sub_district,
                 'website': business_info.website,
                 'signature_url': business_info.signature.url if business_info.signature else '',
                 'website': business_info.website,
@@ -436,6 +463,12 @@ def business_settings(request):
             if password:
                 business_info.security_password = password
             
+            business_info.city = request.POST.get('city', '')
+            business_info.pincode = request.POST.get('pincode', '')
+            business_info.state = request.POST.get('state', '')
+            business_info.district = request.POST.get('district', '')
+            business_info.sub_district = request.POST.get('sub_district', '')
+
             business_info.upi_id = request.POST.get('upi_id', '')
             business_info.terms_and_conditions = request.POST.get('terms_and_conditions', '')
                 
@@ -478,10 +511,19 @@ def activate_license(request):
             return JsonResponse({'success': False, 'error': 'Please enter a key'})
             
         # Find the key
-        try:
-            activation_key = ActivationKey.objects.get(key=key_input, is_used=False)
-        except ActivationKey.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Invalid or already used activation key'})
+        # Try exact match first
+        activation_key = ActivationKey.objects.filter(key=key_input, is_used=False).first()
+        
+        # If not found, try appending a dash (in case DB has it but user omitted)
+        if not activation_key:
+             activation_key = ActivationKey.objects.filter(key=key_input + '-', is_used=False).first()
+             
+        # If still not found, try removing a dash (in case user added it but DB doesn't have it)
+        if not activation_key and key_input.endswith('-'):
+             activation_key = ActivationKey.objects.filter(key=key_input.rstrip('-'), is_used=False).first()
+
+        if not activation_key:
+            return JsonResponse({'success': False, 'error': f'Invalid or already used activation key.'})
             
         # Activate
         business_info = BusinessInformation.get_business_info()

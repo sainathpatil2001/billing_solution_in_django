@@ -14,6 +14,8 @@ class ActivationMiddleware:
         allowed_paths = [
             '/billing/activation/', 
             '/billing/activate-license/', 
+            '/activation/', 
+            '/activate-license/', 
             '/admin/',
             '/static/',
             '/media/',

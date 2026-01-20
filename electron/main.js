@@ -1,14 +1,36 @@
-const { app, BrowserWindow, Menu, shell, dialog } = require('electron');
+const { app, BrowserWindow, Menu, shell, dialog, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
-const isDev = process.env.NODE_ENV === 'development';
+const fs = require('fs');
+
+const isDev = !app.isPackaged;
 
 let mainWindow;
+let splashWindow;
 let djangoProcess;
 
-// Keep a global reference of the window object
+function createSplashWindow() {
+  splashWindow = new BrowserWindow({
+    width: 600,
+    height: 400,
+    frame: false,
+    transparent: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false // Allowed for internal splash screen
+    },
+    icon: path.join(__dirname, '../assets/icon.png'),
+    alwaysOnTop: true
+  });
+
+  splashWindow.loadFile(path.join(__dirname, 'splash.html'));
+
+  splashWindow.on('closed', () => {
+    splashWindow = null;
+  });
+}
+
 function createWindow() {
-  // Create the browser window
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -22,49 +44,43 @@ function createWindow() {
     },
     icon: path.join(__dirname, '../assets/icon.png'),
     titleBarStyle: 'default',
-    show: false // Don't show until ready
+    show: false
   });
 
-  // Load the Django app
   const startUrl = 'http://localhost:8000';
 
-  // Try to load the URL with retry logic
   const loadWithRetry = (retries = 5) => {
     mainWindow.loadURL(startUrl).then(() => {
+      // Server is definitely up, show main window
+      if (splashWindow) {
+        splashWindow.close();
+      }
       mainWindow.show();
 
-      // Open DevTools in development
       if (isDev) {
         mainWindow.webContents.openDevTools();
       }
     }).catch(err => {
       console.error('Failed to load URL (attempt ' + (6 - retries) + '):', err);
-
       if (retries > 0) {
-        // Retry after 2 seconds
-        setTimeout(() => {
-          loadWithRetry(retries - 1);
-        }, 2000);
+        setTimeout(() => loadWithRetry(retries - 1), 2000);
       } else {
-        dialog.showErrorBox('Connection Error', 'Failed to connect to Django server. Please make sure the server is running on http://localhost:8000');
+        dialog.showErrorBox('Connection Error', 'Failed to connect to Django server.');
       }
     });
   };
 
   loadWithRetry();
 
-  // Handle window closed
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
 
-  // Handle external links
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
   });
 
-  // Create application menu
   createMenu();
 }
 
@@ -76,209 +92,178 @@ function createMenu() {
         {
           label: 'New Bill',
           accelerator: 'CmdOrCtrl+N',
-          click: () => {
-            mainWindow.loadURL('http://localhost:8000/billing/');
-          }
+          click: () => { mainWindow.loadURL('http://localhost:8000/billing/'); }
         },
         {
           label: 'Search Bills',
           accelerator: 'CmdOrCtrl+F',
-          click: () => {
-            mainWindow.loadURL('http://localhost:8000/billing/bills/');
-          }
+          click: () => { mainWindow.loadURL('http://localhost:8000/billing/bills/'); }
         },
         {
           label: 'Inventory',
           accelerator: 'CmdOrCtrl+I',
-          click: () => {
-            mainWindow.loadURL('http://localhost:8000/inventory_management/');
-          }
+          click: () => { mainWindow.loadURL('http://localhost:8000/inventory_management/'); }
         },
         { type: 'separator' },
         {
           label: 'Business Settings',
-          click: () => {
-            mainWindow.loadURL('http://localhost:8000/billing/business-settings/');
-          }
+          click: () => { mainWindow.loadURL('http://localhost:8000/billing/business-settings/'); }
         },
         { type: 'separator' },
         {
           label: 'Exit',
           accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
-          click: () => {
-            app.quit();
-          }
+          click: () => { app.quit(); }
         }
       ]
     },
     {
       label: 'Edit',
       submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
-        { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
-        { role: 'selectall' }
+        { role: 'undo' }, { role: 'redo' }, { type: 'separator' },
+        { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectall' }
       ]
     },
     {
       label: 'View',
       submenu: [
-        { role: 'reload' },
-        { role: 'forceReload' },
-        { role: 'toggleDevTools' },
+        { role: 'reload' }, { role: 'forceReload' }, { role: 'toggleDevTools' },
         { type: 'separator' },
-        { role: 'resetZoom' },
-        { role: 'zoomIn' },
-        { role: 'zoomOut' },
+        { role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' },
         { type: 'separator' },
         { role: 'togglefullscreen' }
       ]
     },
     {
       label: 'Window',
-      submenu: [
-        { role: 'minimize' },
-        { role: 'close' }
-      ]
-    },
-    {
-      label: 'Help',
-      submenu: [
-        {
-          label: 'About Billing System',
-          click: () => {
-            dialog.showMessageBox(mainWindow, {
-              type: 'info',
-              title: 'About Billing System',
-              message: 'Billing System Desktop Application',
-              detail: 'Version 1.0.0\nA comprehensive billing and inventory management system.'
-            });
-          }
-        },
-        { type: 'separator' },
-        {
-          label: 'License & Activation',
-          click: () => {
-            mainWindow.loadURL('http://localhost:8000/billing/business-settings/');
-          }
-        }
-      ]
+      submenu: [{ role: 'minimize' }, { role: 'close' }]
     }
   ];
-
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 }
 
 function startDjangoServer() {
   return new Promise((resolve, reject) => {
-    console.log('Starting Django server...');
+    const log = (msg) => {
+      console.log(msg);
+      if (splashWindow && !splashWindow.isDestroyed()) {
+        splashWindow.webContents.send('log-message', msg);
+      }
+    };
 
-    // Use the Python executable from the system
-    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+    const logError = (msg) => {
+      console.error(msg);
+      if (splashWindow && !splashWindow.isDestroyed()) {
+        splashWindow.webContents.send('log-error', msg);
+      }
+    };
 
-    djangoProcess = spawn(pythonCmd, ['manage.py', 'runserver', '8000'], {
-      cwd: path.join(__dirname, '..'),
-      stdio: ['pipe', 'pipe', 'pipe']
-    });
+    log('Starting Django server process...');
+
+    let spawnCmd;
+    let spawnArgs = [];
+    let cwdOption = undefined;
+
+    if (isDev) {
+      spawnCmd = process.platform === 'win32' ? 'python' : 'python3';
+      spawnArgs = ['manage.py', 'runserver', '8000'];
+      cwdOption = path.join(__dirname, '..');
+      log('Mode: Development');
+    } else {
+      const resourcesPath = process.resourcesPath;
+      if (process.platform === 'win32') {
+        spawnCmd = path.join(resourcesPath, 'django_app', 'django_app.exe');
+      } else {
+        spawnCmd = path.join(resourcesPath, 'django_app', 'django_app');
+      }
+      log('Mode: Production');
+      log(`Executable: ${spawnCmd}`);
+
+      if (!fs.existsSync(spawnCmd)) {
+        reject(new Error(`Executable not found at: ${spawnCmd}`));
+        return;
+      }
+    }
+
+    try {
+      djangoProcess = spawn(spawnCmd, spawnArgs, {
+        cwd: cwdOption,
+        stdio: ['ignore', 'pipe', 'pipe'], // Ignore stdin to prevent hanging
+        env: { ...process.env, PYTHONUNBUFFERED: '1', DJANGO_SETTINGS_MODULE: 'bill_maker.settings' }
+      });
+    } catch (e) {
+      logError(`Failed to spawn process: ${e.message}`);
+      reject(e);
+      return;
+    }
 
     let serverReady = false;
 
     djangoProcess.stdout.on('data', (data) => {
       const output = data.toString();
-      console.log('Django:', output);
+      log(output.trim());
 
-      // Check if server is ready - look for the specific Django startup message
-      if (output.includes('Starting development server at http://127.0.0.1:8000/') ||
-        output.includes('Starting development server at http://localhost:8000/') ||
+      if (output.includes('Starting development server') ||
         output.includes('Quit the server with CTRL-BREAK')) {
         if (!serverReady) {
           serverReady = true;
-          console.log('Django server is ready!');
-          setTimeout(() => resolve(), 1000); // Wait 1 second for server to be fully ready
+          log('Server is ready signal received.');
+          if (splashWindow && !splashWindow.isDestroyed()) {
+            splashWindow.webContents.send('server-ready');
+          }
+          setTimeout(resolve, 2000); // Give it a moment to actually bind
         }
       }
     });
 
     djangoProcess.stderr.on('data', (data) => {
       const error = data.toString();
-      console.error('Django Error:', error);
-
-      // Some Django messages go to stderr but are not errors
-      if (error.includes('Watching for file changes') ||
-        error.includes('Starting development server')) {
-        // These are normal Django messages, not errors
-        return;
-      }
+      // Filter out non-error standard logs if needed, but showing everything is safer for debugging
+      logError(error.trim());
     });
 
     djangoProcess.on('error', (err) => {
-      console.error('Failed to start Django server:', err);
+      logError(`Process error: ${err.message}`);
       reject(err);
     });
 
     djangoProcess.on('close', (code) => {
-      console.log(`Django server exited with code ${code}`);
-    });
-
-    // Timeout after 15 seconds (reduced from 30)
-    setTimeout(() => {
+      log(`Django server exited with code ${code}`);
       if (!serverReady) {
-        reject(new Error('Django server startup timeout'));
+        reject(new Error(`Server exited prematurely with code ${code}`));
       }
-    }, 15000);
+    });
   });
 }
 
-// App event handlers
-// App event handlers
 app.whenReady().then(async () => {
+  createSplashWindow();
+
   try {
-    // Start Django server in background and WAIT for it
     await startDjangoServer();
     createWindow();
-
   } catch (error) {
-    console.error('Failed to start application:', error);
-    dialog.showErrorBox('Startup Error', 'Failed to start the Django server.\n\nError: ' + error.message + '\n\nPlease ensure Python is installed and added to PATH.');
-    app.quit();
+    console.error('Failed to start:', error);
+    // Keep splash open to show error, or show dialog
+    // We decide to show dialog, but the splash logs are visible behind it
+    dialog.showMessageBox(splashWindow || mainWindow, {
+      type: 'error',
+      title: 'Startup Error',
+      message: 'Failed to start the Django server.',
+      detail: error.message
+    });
+    // Do not quit immediately so user can read logs
   }
 });
 
 app.on('window-all-closed', () => {
-  // Kill Django process
-  if (djangoProcess) {
-    djangoProcess.kill();
-  }
-
-  // On macOS, keep app running even when all windows are closed
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
-
-app.on('activate', () => {
-  // On macOS, re-create window when dock icon is clicked
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+  if (djangoProcess) djangoProcess.kill();
+  if (process.platform !== 'darwin') app.quit();
 });
 
 app.on('before-quit', () => {
-  // Kill Django process before quitting
-  if (djangoProcess) {
-    djangoProcess.kill();
-  }
+  if (djangoProcess) djangoProcess.kill();
 });
 
-// Security: Prevent new window creation
-app.on('web-contents-created', (event, contents) => {
-  contents.on('new-window', (event, navigationUrl) => {
-    event.preventDefault();
-    shell.openExternal(navigationUrl);
-  });
-});
 

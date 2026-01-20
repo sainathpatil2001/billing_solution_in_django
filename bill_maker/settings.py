@@ -1,7 +1,13 @@
 from pathlib import Path
+import sys
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+if getattr(sys, 'frozen', False):
+    # If running as bundled executable, resources are in sys._MEIPASS
+    BASE_DIR = Path(sys._MEIPASS)
+else:
+    BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -13,7 +19,7 @@ SECRET_KEY = 'django-insecure-@11(jnjhq2pwe=72d2b8heqe1bq7wqus2nj7%f_@vxgl2!c+g4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -47,6 +53,8 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             BASE_DIR / 'templates',
+            BASE_DIR / 'genrate_bill' / 'templates',
+            BASE_DIR / 'inventory' / 'templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -66,12 +74,27 @@ WSGI_APPLICATION = 'bill_maker.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if getattr(sys, 'frozen', False):
+    # If running as bundled executable, use AppData for DB and Media
+    app_data = os.getenv('APPDATA')
+    APP_DATA_DIR = Path(app_data) / "BillingSystem"
+    APP_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': APP_DATA_DIR / 'db.sqlite3',
+        }
     }
-}
+    MEDIA_ROOT = APP_DATA_DIR / 'media'
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # Password validation
@@ -113,8 +136,10 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# MEDIA_ROOT is set above conditionally
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

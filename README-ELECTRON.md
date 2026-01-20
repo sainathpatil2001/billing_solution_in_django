@@ -47,24 +47,17 @@ npm start
 
 ## Building for Production
 
-### Build for Current Platform
+To create a standalone Desktop Installer (Windows .exe) that includes the Python backend (no separate Python installation required):
 
 ```bash
-npm run build
+python build_installer.py
 ```
 
-### Build for Specific Platforms
+This script will:
+1. Bundle the Django Backend Using PyInstaller.
+2. Build the Electron Frontend.
+3. Package everything into a Windows Installer in `dist/`.
 
-```bash
-# Windows
-npm run build-win
-
-# macOS
-npm run build-mac
-
-# Linux
-npm run build-linux
-```
 
 ## Project Structure
 

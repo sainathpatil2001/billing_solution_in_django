@@ -1,0 +1,446 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Analytics - MediBill Pro</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary-bg: #f3f4f6;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #e2e8f0;
+            --accent-color: #3b82f6;
+            --card-bg: #ffffff;
+            --font-family: 'Inter', sans-serif;
+            --border-color: #e5e7eb;
+            --primary-color: #4361ee;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--primary-bg);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            flex-shrink: 0;
+        }
+
+        .brand-section {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .brand-logo {
+            width: 32px; height: 32px;
+            background: var(--accent-color);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.2rem;
+        }
+
+        .brand-text { font-weight: 600; font-size: 1.1rem; letter-spacing: 0.5px; }
+
+        .nav-menu {
+            flex: 1;
+            padding: 1.5rem 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: #94a3b8; text-decoration: none;
+            border-radius: 8px; transition: all 0.2s; font-weight: 500;
+        }
+
+        .nav-item:hover, .nav-item.active { background-color: rgba(255,255,255,0.1); color: white; }
+        .nav-item.active { background-color: var(--accent-color); }
+        .nav-item i { font-size: 1.2rem; }
+
+        .user-section {
+            padding: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.2);
+        }
+
+        .business-badge-sidebar {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.5rem; border-radius: 8px;
+        }
+        
+        .business-logo-mini {
+            width: 36px; height: 36px; border-radius: 50%; background: white; 
+            object-fit: contain; border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .content-scrollable {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        /* Cards */
+        .glass-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            height: 100%;
+        }
+
+        .kpi-card {
+            background: white; border-radius: 12px; padding: 1.25rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .kpi-label { font-size: 0.85rem; color: #64748b; font-weight: 600; margin-bottom: 0.25rem; text-transform: uppercase; }
+        .kpi-value { font-size: 1.5rem; font-weight: 700; color: #1e293b; }
+        .kpi-icon { 
+            width: 48px; height: 48px; border-radius: 10px; 
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+            font-size: 0.9rem;
+        }
+
+        .app-branding {
+            position: absolute; bottom: 5px; right: 15px; font-size: 0.7rem; 
+            color: #cbd5e1; pointer-events: none; z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="brand-section">
+            <div class="brand-logo"><i class="bi bi-wallet2"></i></div>
+            <div class="brand-text">MediBill Pro</div>
+        </div>
+        <div class="nav-menu">
+            <a href="/billing/" class="nav-item">
+                <i class="bi bi-receipt-cutoff"></i><span>New Invoice</span>
+            </a>
+            <a href="/billing/customers/" class="nav-item">
+                <i class="bi bi-people"></i><span>Customers</span>
+            </a>
+            <a href="/billing/bills/" class="nav-item">
+                <i class="bi bi-clock-history"></i><span>History & Search</span>
+            </a>
+            <a href="/inventory/inventory_management/" class="nav-item">
+                <i class="bi bi-box-seam"></i><span>Inventory</span>
+            </a>
+            <a href="/billing/tax-center/" class="nav-item">
+                <i class="bi bi-file-earmark-spreadsheet"></i><span>Tax Center</span>
+            </a>
+            <a href="/billing/analytics/" class="nav-item active">
+                <i class="bi bi-graph-up-arrow"></i><span>Sales Analytics</span>
+            </a>
+            <a href="/billing/backup/" class="nav-item">
+                <i class="bi bi-database-check"></i><span>Backup & Restore</span>
+            </a>
+            <a href="/billing/business-settings/" class="nav-item">
+                <i class="bi bi-gear"></i><span>Settings</span>
+            </a>
+        </div>
+        <div class="user-section">
+             <div class="business-badge-sidebar">
+                {% if business_info.logo %}
+                <img src="{{ business_info.logo.url }}" alt="Logo" class="business-logo-mini">
+                {% else %}
+                <div class="business-logo-mini d-flex align-items-center justify-content-center text-primary fw-bold">
+                    {{ business_info.company_name|slice:":1" }}
+                </div>
+                {% endif %}
+                <div class="d-flex flex-column text-truncate">
+                    <span class="small fw-bold text-white text-truncate">{{ business_info.company_name|default:"My Business" }}</span>
+                    <span class="small text-muted" style="font-size: 0.7rem;">Dashboard</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-scrollable">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h4 class="fw-bold m-0 text-dark">Sales Analytics</h4>
+                    <span class="text-muted small">Insights and performance metrics</span>
+                </div>
+                <div class="d-flex gap-2 bg-white p-2 rounded shadow-sm border">
+                    <input type="date" id="startDate" class="form-control form-control-sm">
+                    <span class="align-self-center text-muted">-</span>
+                    <input type="date" id="endDate" class="form-control form-control-sm">
+                    <button onclick="loadAnalytics()" class="btn btn-primary btn-sm fw-bold px-3">
+                        Analyze
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="kpi-card">
+                        <div>
+                            <div class="kpi-label">Total Revenue</div>
+                            <div class="kpi-value text-primary" id="kpiRevenue">₹0</div>
+                        </div>
+                        <div class="kpi-icon bg-light text-primary"><i class="bi bi-currency-rupee"></i></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="kpi-card">
+                        <div>
+                            <div class="kpi-label">Total Orders</div>
+                            <div class="kpi-value text-success" id="kpiOrders">0</div>
+                        </div>
+                        <div class="kpi-icon bg-light text-success"><i class="bi bi-receipt"></i></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="kpi-card">
+                        <div>
+                            <div class="kpi-label">Avg Order Value</div>
+                            <div class="kpi-value text-warning" id="kpiAov">₹0</div>
+                        </div>
+                        <div class="kpi-icon bg-light text-warning"><i class="bi bi-cart-check"></i></div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="kpi-card">
+                        <div>
+                            <div class="kpi-label">Products Sold</div>
+                            <div class="kpi-value text-info" id="kpiProducts">0</div>
+                        </div>
+                        <div class="kpi-icon bg-light text-info"><i class="bi bi-box-seam"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-8">
+                    <div class="glass-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold m-0">Sales Trend</h6>
+                            <select class="form-select form-select-sm w-auto" id="trendGroupBy" onchange="loadAnalytics()">
+                                <option value="day">Daily</option>
+                                <option value="month">Monthly</option>
+                            </select>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-card">
+                        <h6 class="fw-bold mb-3">Payment Modes</h6>
+                        <div class="chart-container" style="height: 250px;">
+                            <canvas id="paymentModeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="glass-card">
+                        <h6 class="fw-bold mb-3">Top 5 Selling Products (Revenue)</h6>
+                        <div class="chart-container">
+                            <canvas id="topProductsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="glass-card">
+                        <h6 class="fw-bold mb-3">Category Performance</h6>
+                         <div class="chart-container">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="app-branding">MediBill Pro v2.0</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Init Date Pickers
+        const today = new Date();
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        
+        document.getElementById('endDate').valueAsDate = today;
+        document.getElementById('startDate').valueAsDate = startOfMonth;
+
+        // Chart Instances
+        let revenueChart = null;
+        let paymentModeChart = null;
+        let topProductsChart = null;
+        let categoryChart = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAnalytics();
+        });
+
+        function loadAnalytics() {
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            const group = document.getElementById('trendGroupBy').value;
+
+            if(!start || !end) return;
+
+            fetch(`/billing/analytics/data/?start=${start}&end=${end}&group=${group}`)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        updateKPIs(data.kpis);
+                        updateCharts(data.charts);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+
+        function updateKPIs(kpis) {
+            document.getElementById('kpiRevenue').innerText = '₹' + formatNumber(kpis.revenue);
+            document.getElementById('kpiOrders').innerText = kpis.orders;
+            document.getElementById('kpiAov').innerText = '₹' + formatNumber(kpis.aov);
+            document.getElementById('kpiProducts').innerText = kpis.products_sold;
+        }
+
+        function updateCharts(data) {
+            // 1. Revenue Chart
+            const ctxRev = document.getElementById('revenueChart').getContext('2d');
+            if(revenueChart) revenueChart.destroy();
+            revenueChart = new Chart(ctxRev, {
+                type: 'line',
+                data: {
+                    labels: data.trend.labels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: data.trend.values,
+                        borderColor: '#4361ee',
+                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            // 2. Payment Modes
+            const ctxPay = document.getElementById('paymentModeChart').getContext('2d');
+            if(paymentModeChart) paymentModeChart.destroy();
+            paymentModeChart = new Chart(ctxPay, {
+                type: 'doughnut',
+                data: {
+                    labels: data.payment.labels,
+                    datasets: [{
+                        data: data.payment.values,
+                        backgroundColor: ['#4361ee', '#3ab7bf', '#f72585', '#7209b7']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // 3. Top Products
+            const ctxProd = document.getElementById('topProductsChart').getContext('2d');
+            if(topProductsChart) topProductsChart.destroy();
+            topProductsChart = new Chart(ctxProd, {
+                type: 'bar',
+                data: {
+                    labels: data.products.labels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: data.products.values,
+                        backgroundColor: '#4cc9f0',
+                        borderRadius: 4
+                    }]
+                },
+                options: { 
+                    indexAxis: 'y',
+                    responsive: true, 
+                    maintainAspectRatio: false 
+                }
+            });
+
+            // 4. Category
+            const ctxCat = document.getElementById('categoryChart').getContext('2d');
+            if(categoryChart) categoryChart.destroy();
+            categoryChart = new Chart(ctxCat, {
+                type: 'pie',
+                data: {
+                    labels: data.categories.labels,
+                    datasets: [{
+                        data: data.categories.values,
+                        backgroundColor: ['#ffbe0b', '#fb5607', '#ff006e', '#8338ec', '#3a86ff']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function formatNumber(num) {
+            return parseFloat(num).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+        }
+    </script>
+</body>
+</html>

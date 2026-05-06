@@ -1,0 +1,602 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Settings - MediBill Pro</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary-bg: #f3f4f6;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #e2e8f0;
+            --accent-color: #3b82f6;
+            --card-bg: #ffffff;
+            --font-family: 'Inter', sans-serif;
+            --border-color: #e5e7eb;
+            --primary-color: #4361ee;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--primary-bg);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar (Shared) */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            flex-shrink: 0;
+        }
+
+        .brand-section {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .brand-logo {
+            width: 32px; height: 32px;
+            background: var(--accent-color);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 1.2rem;
+        }
+
+        .brand-text { font-weight: 600; font-size: 1.1rem; letter-spacing: 0.5px; }
+
+        .nav-menu {
+            flex: 1;
+            padding: 1.5rem 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: #94a3b8; text-decoration: none;
+            border-radius: 8px; transition: all 0.2s; font-weight: 500;
+        }
+
+        .nav-item:hover, .nav-item.active { background-color: rgba(255,255,255,0.1); color: white; }
+        .nav-item.active { background-color: var(--accent-color); }
+        .nav-item i { font-size: 1.2rem; }
+
+        .user-section {
+            padding: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.2);
+        }
+
+        .business-badge-sidebar {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.5rem; border-radius: 8px;
+        }
+        
+        .business-logo-mini {
+            width: 36px; height: 36px; border-radius: 50%; background: white; 
+            object-fit: contain; border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .content-scrollable {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            padding-bottom: 3rem;
+        }
+        
+        /* Settings Specifics */
+        .section-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            padding: 2rem;
+            border: 1px solid rgba(0,0,0,0.04);
+            height: 100%;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+            border-color: transparent;
+        }
+
+        .section-header {
+            display: flex; align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f8fafc;
+        }
+        
+        .section-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            color: var(--accent-color);
+            display: flex; align-items: center; justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
+        }
+        
+        .section-title { margin: 0; font-weight: 700; font-size: 1.05rem; color: #1e293b; letter-spacing: -0.3px; }
+
+        .form-label {
+            font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.4rem;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        
+        .form-control, .form-select {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.7rem 1rem;
+            font-size: 0.95rem;
+            background-color: #f8fafc;
+            transition: all 0.2s;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background-color: white;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .logo-preview-box {
+            width: 100%; height: 110px;
+            border: 2px dashed #e2e8f0; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            background: #fff;
+            margin-top: 0.5rem; overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .logo-preview-box:hover { border-color: var(--accent-color); }
+
+        .app-branding {
+            position: absolute; bottom: 5px; right: 15px; font-size: 0.7rem; 
+            color: #cbd5e1; pointer-events: none; z-index: 100;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Desktop Sidebar -->
+    <div class="sidebar">
+        <div class="brand-section">
+            <div class="brand-logo"><i class="bi bi-wallet2"></i></div>
+            <div class="brand-text">MediBill Pro</div>
+        </div>
+        <div class="nav-menu">
+            <a href="/billing/" class="nav-item">
+                <i class="bi bi-receipt-cutoff"></i><span>New Invoice</span>
+            </a>
+            <a href="/billing/customers/" class="nav-item">
+                <i class="bi bi-people"></i><span>Customers</span>
+            </a>
+            <a href="/billing/tax-center/" class="nav-item d-none">
+                <i class="bi bi-file-earmark-spreadsheet"></i><span>Tax Center</span>
+            </a>
+            <a href="/billing/analytics/" class="nav-item d-none">
+                <i class="bi bi-graph-up-arrow"></i><span>Sales Analytics</span>
+            </a>
+            <a href="/billing/bills/" class="nav-item">
+                <i class="bi bi-clock-history"></i><span>History & Search</span>
+            </a>
+            <a href="/inventory/inventory_management/" class="nav-item">
+                <i class="bi bi-box-seam"></i><span>Inventory</span>
+            </a>
+            <a href="/billing/backup/" class="nav-item d-none">
+                <i class="bi bi-database-check"></i><span>Backup & Restore</span>
+            </a>
+            <a href="/billing/business-settings/" class="nav-item active">
+                <i class="bi bi-gear"></i><span>Settings</span>
+            </a>
+        </div>
+        <div class="user-section">
+             <div class="business-badge-sidebar">
+                {% if business_info.logo %}
+                <img src="{{ business_info.logo.url }}" alt="Logo" class="business-logo-mini">
+                {% else %}
+                <div class="business-logo-mini d-flex align-items-center justify-content-center text-primary fw-bold">
+                    {{ business_info.company_name|slice:":1" }}
+                </div>
+                {% endif %}
+                <div class="d-flex flex-column text-truncate">
+                    <span class="small fw-bold text-white text-truncate">{{ business_info.company_name|default:"My Business" }}</span>
+                    <span class="small text-muted" style="font-size: 0.7rem;">Config</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-scrollable">
+            <form id="businessForm">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <h4 class="fw-bold m-0 text-dark">Business Configuration</h4>
+                        <span class="text-muted small">Manage your company details and system preferences</span>
+                    </div>
+                    <div>
+                         <button type="submit" class="btn btn-primary px-4 fw-bold">
+                            <i class="bi bi-check-lg me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Company Profile -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-icon"><i class="bi bi-building"></i></div>
+                                <h5 class="section-title">Company Profile</h5>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Company Name *</label>
+                                <input type="text" class="form-control" name="company_name" value="{{ business_info.company_name }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Address</label>
+                                <input type="text" class="form-control mb-2" name="address_line1" value="{{ business_info.address_line1 }}" placeholder="Line 1" required>
+                                <input type="text" class="form-control" name="address_line2" value="{{ business_info.address_line2 }}" placeholder="Line 2 (Optional)">
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">City</label>
+                                    <input type="text" class="form-control" name="city" value="{{ business_info.city }}" placeholder="City">
+                                </div>
+                                <div class="col-md-4">
+                                     <label class="form-label">Pincode</label>
+                                    <input type="text" class="form-control" name="pincode" value="{{ business_info.pincode }}" placeholder="Pincode">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">State</label>
+                                    <select class="form-select" name="state" id="stateSelect" required>
+                                        <option value="">Select State</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                     <label class="form-label">District</label>
+                                    <select class="form-select" name="district" id="districtSelect" required>
+                                        <option value="">Select District</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                     <label class="form-label">Sub District (Taluka)</label>
+                                    <input type="text" class="form-control" name="sub_district" value="{{ business_info.sub_district }}" placeholder="Taluka">
+                                </div>
+                            </div>
+                            
+                            <script src="{% static 'js/indian_states_districts.js' %}"></script>
+                            <script src="{% static 'js/districts.js' %}"></script>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    // Util functions from districts.js are global now
+                                    if(typeof populateStates === 'function') {
+                                        populateStates('stateSelect', "{{ business_info.state }}");
+                                        
+                                        // Init districts
+                                        const stateSelect = document.getElementById('stateSelect');
+                                        stateSelect.addEventListener('change', function() {
+                                            populateDistricts('stateSelect', 'districtSelect');
+                                        });
+                                        
+                                        // Initial population with selected value
+                                        if(stateSelect.value) {
+                                            populateDistricts('stateSelect', 'districtSelect', "{{ business_info.district }}");
+                                        }
+                                    } else {
+                                        console.error("Districts.js functions not loaded");
+                                    }
+                                });
+                            </script>
+                            <div class="mb-3">
+                                <label class="form-label">Company Logo</label>
+                                <input type="file" class="form-control form-control-sm" name="logo" accept="image/*" onchange="previewImage(this, 'logoPreview')">
+                                <div class="logo-preview-box">
+                                    {% if business_info.logo %}
+                                        <img src="{{ business_info.logo.url }}" id="logoPreview" style="max-height: 80px; max-width: 90%;">
+                                    {% else %}
+                                        <span class="text-muted small" id="logoPlaceholder">Upload Logo</span>
+                                        <img id="logoPreview" style="display: none; max-height: 80px; max-width: 90%;">
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Details -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="section-icon"><i class="bi bi-person-lines-fill"></i></div>
+                                <h5 class="section-title">Contact & Tax</h5>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" name="phone" value="{{ business_info.phone }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" name="email" value="{{ business_info.email }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">GSTIN / Tax ID</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-file-earmark-text"></i></span>
+                                    <input type="text" class="form-control border-start-0 ps-0" name="gst_number" value="{{ business_info.gst_number }}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">PAN Card Number</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-card-heading"></i></span>
+                                    <input type="text" class="form-control border-start-0 ps-0" name="pan_number" value="{{ business_info.pan_number }}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Website</label>
+                                <input type="url" class="form-control" name="website" value="{{ business_info.website }}" placeholder="https://">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment & Security -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="section-card">
+                             <div class="section-header">
+                                <div class="section-icon"><i class="bi bi-shield-lock"></i></div>
+                                <h5 class="section-title">Payments & Security</h5>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Admin Security Password</label>
+                                <input type="password" class="form-control" name="security_password" value="{{ business_info.security_password|default:'1234' }}">
+                                <div class="form-text small">Required for critical actions like editing payments.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">UPI ID (QR Payment)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-end-0">@</span>
+                                    <input type="text" class="form-control border-start-0 ps-0" name="upi_id" value="{{ business_info.upi_id }}" placeholder="merchant@upi">
+                                </div>
+                            </div>
+                             <div class="mb-3">
+                                <label class="form-label">Digital Signature</label>
+                                <input type="file" class="form-control form-control-sm" name="signature" accept="image/*" onchange="previewImage(this, 'sigPreview')">
+                                <div class="logo-preview-box" style="height: 70px;">
+                                    {% if business_info.signature %}
+                                        <img src="{{ business_info.signature.url }}" id="sigPreview" style="max-height: 50px; max-width: 90%;">
+                                    {% else %}
+                                        <span class="text-muted small" id="sigPlaceholder">Upload Signature</span>
+                                        <img id="sigPreview" style="display: none; max-height: 50px; max-width: 90%;">
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+
+
+                    <!-- Data Management / Backup -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="section-card">
+                             <div class="section-header">
+                                <div class="section-icon"><i class="bi bi-database-check"></i></div>
+                                <h5 class="section-title">Data Management</h5>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Create Backup</label>
+                                <button type="button" class="btn btn-outline-primary w-100 fw-bold" onclick="downloadBackup()">
+                                    <i class="bi bi-cloud-arrow-down me-2"></i> Download Full Backup
+                                </button>
+                                <div class="form-text small mt-1">Saves all records, customers, and inventory to your device.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Restore Data</label>
+                                <input type="file" class="form-control mb-2" id="restoreFile" accept=".zip">
+                                <button type="button" class="btn btn-danger w-100 fw-bold" onclick="restoreBackup()">
+                                    <i class="bi bi-cloud-arrow-up me-2"></i> Restore from File
+                                </button>
+                                <div class="form-text small mt-1 text-danger">Warning: Restoring will overwrite existing data.</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Auto-Backup Reminder</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="backupReminderDays" value="7" min="1">
+                                    <span class="input-group-text">Days</span>
+                                    <button class="btn btn-secondary text-white" type="button" onclick="saveBackupSettings()">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terms & Conditions (Fixed Layout) -->
+                    <div class="col-12">
+                        <div class="section-card">
+                             <div class="section-header">
+                                <div class="section-icon"><i class="bi bi-file-earmark-text"></i></div>
+                                <h5 class="section-title">Terms & Conditions</h5>
+                            </div>
+                            <textarea class="form-control font-monospace" name="terms_and_conditions" rows="5" placeholder="Enter standard terms (one per line)...">{{ business_info.terms_and_conditions }}</textarea>
+                            <div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i>These will appear at the bottom of every invoice. Separate by newline for bullet points.</div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="app-branding">
+           MediBill Pro v2.0
+        </div>
+    </div>
+
+    <!-- Toasts -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-check-circle-fill me-2"></i> <span id="successMessage">Success</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                 <div class="toast-body">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i> <span id="errorMessage">Error</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Form Submission
+        document.getElementById('businessForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+            btn.disabled = true;
+
+            const formData = new FormData(this);
+            fetch('/billing/business-settings/', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) showToast('success', data.message);
+                else showToast('error', data.error || 'Failed to save');
+            })
+            .catch(err => showToast('error', 'Network error'))
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        });
+
+        // Image Preview
+        function previewImage(input, previewId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById(previewId);
+                    const placeholder = document.getElementById(previewId === 'logoPreview' ? 'logoPlaceholder' : 'sigPlaceholder');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    if(placeholder) placeholder.style.display = 'none';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+
+
+        // Backup
+        function downloadBackup() {
+            window.location.href = "{% url 'create_backup' %}";
+            showToast('success', 'Backup started...');
+        }
+
+        function restoreBackup() {
+            const input = document.getElementById('restoreFile');
+            if(!input.files.length) return;
+            
+            if(!confirm('WARNING: Overwrite all data with backup?')) {
+                input.value = ''; // clear selection
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('backup_file', input.files[0]);
+
+            fetch("{% url 'restore_backup' %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    showToast('success', 'Restored successfully! Reloading...');
+                    setTimeout(() => window.location.reload(), 2000);
+                } else showToast('error', data.error);
+            })
+            .catch(err => showToast('error', 'Restore failed'));
+        }
+
+        function saveBackupSettings() {
+            const days = document.getElementById('backupReminderDays').value;
+             fetch("{% url 'update_backup_settings' %}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ days })
+            })
+            .then(res => res.json())
+            .then(data => { if(data.success) showToast('success', 'Settings saved'); });
+        }
+
+        // Utils
+        function showToast(type, msg) {
+            document.getElementById(type === 'success' ? 'successMessage' : 'errorMessage').textContent = msg;
+            new bootstrap.Toast(document.getElementById(type === 'success' ? 'successToast' : 'errorToast'), { delay: 3000 }).show();
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>

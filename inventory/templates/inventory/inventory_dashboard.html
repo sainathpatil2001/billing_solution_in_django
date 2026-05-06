@@ -1,0 +1,1066 @@
+{% load static %}
+{% load form_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management - Billing Desk</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --primary-bg: #f3f4f6;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #e2e8f0;
+            --accent-color: #3b82f6;
+            --card-bg: #ffffff;
+            --font-family: 'Inter', sans-serif;
+            --border-color: #e5e7eb;
+            --primary-color: #2c3e50; /* Kept from inventory for consistency in specific elements */
+            --success-color: #2ecc71;
+            --warning-color: #f1c40f;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--primary-bg);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            flex-shrink: 0;
+        }
+
+        .brand-section {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            background: var(--accent-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .brand-text { font-weight: 600; font-size: 1.1rem; letter-spacing: 0.5px; }
+
+        .nav-menu {
+            flex: 1;
+            padding: 1.5rem 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .nav-item:hover, .nav-item.active { background-color: rgba(255,255,255,0.1); color: white; }
+        .nav-item.active { background-color: var(--accent-color); }
+        .nav-item i { font-size: 1.2rem; pointer-events: none; }
+
+        /* Sub-navigation for inventory tabs */
+        .sub-nav-header {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            margin: 1rem 0 0.5rem 1rem;
+            font-weight: 600;
+        }
+
+        .user-section {
+            padding: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.2);
+        }
+
+        .business-badge-sidebar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+        
+        .business-logo-mini {
+            width: 36px; height: 36px; border-radius: 50%; background: white; 
+            object-fit: contain; border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .content-scrollable {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        /* Glass Card Utility */
+        .glass-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Form Controls */
+        .form-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 0.3rem;
+        }
+
+        .form-control, .form-select {
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 0.6rem 0.8rem;
+            font-size: 0.9rem;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn-primary { 
+            background-color: var(--accent-color); border-color: var(--accent-color); 
+        }
+        .btn-primary:hover { 
+            background-color: #2563eb; border-color: #2563eb; 
+        }
+
+        /* Inventory Specific */
+        .form-container { display: none; }
+        .form-container.active-form { display: block; animation: fadeIn 0.3s ease; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .settings-badge {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-left: auto;
+        }
+
+        /* Floating Alerts Container */
+        #alertsContainer {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1050;
+            width: 300px;
+        }
+
+        .floating-alert {
+            margin-top: 10px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            transform: translateX(100%);
+            animation: slideIn 0.3s ease forwards;
+            background: white;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .floating-alert.success { border-left-color: var(--success-color); }
+        .floating-alert.error { border-left-color: #ef4444; }
+
+        .floating-alert.fade-out { animation: slideOut 0.3s ease forwards; }
+
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideOut { to { opacity: 0; transform: translateX(100%); } }
+
+        .app-branding {
+            position: absolute; bottom: 5px; right: 15px; font-size: 0.7rem; 
+            color: #cbd5e1; pointer-events: none; z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Alerts Container -->
+    <div id="alertsContainer"></div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="brand-section">
+            <div class="brand-logo"><i class="bi bi-wallet2"></i></div>
+            <div class="brand-text">Billing Desk</div>
+        </div>
+
+        <div class="nav-menu">
+            <a href="/billing/" class="nav-item">
+                <i class="bi bi-receipt-cutoff"></i>
+                <span>New Invoice</span>
+            </a>
+            <a href="/billing/bills/" class="nav-item">
+                <i class="bi bi-clock-history"></i>
+                <span>History & Search</span>
+            </a>
+            <a href="/billing/tax-center/" class="nav-item">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+                <span>Tax Center (CA)</span>
+            </a>
+            <a href="/billing/analytics/" class="nav-item">
+                <i class="bi bi-graph-up-arrow"></i>
+                <span>Analytics</span>
+            </a>
+            
+            <div class="sub-nav-header">Inventory Actions</div>
+            
+            <a onclick="showForm('add-product')" id="add-product-link" class="nav-item {% if active_tab == 'add-product' %}active{% endif %}">
+                <i class="bi bi-plus-circle"></i>
+                <span>Add Product</span>
+            </a>
+            <a onclick="showForm('update-product')" id="update-product-link" class="nav-item {% if active_tab == 'update-product' %}active{% endif %}">
+                <i class="bi bi-pencil-square"></i>
+                <span>Update Product</span>
+            </a>
+            <a onclick="showForm('view-products')" id="view-products-link" class="nav-item {% if active_tab == 'view-products' %}active{% endif %}">
+                <i class="bi bi-list-check"></i>
+                <span>View Products</span>
+            </a>
+
+            <div class="sub-nav-header">Configuration</div>
+
+            <a onclick="showManageUnits()" class="nav-item">
+                <i class="bi bi-ruler"></i>
+                <span>Units</span>
+                <span class="settings-badge">{{ units|length }}</span>
+            </a>
+            <a onclick="showManageCategories()" class="nav-item">
+                <i class="bi bi-tags"></i>
+                <span>Categories</span>
+                <span class="settings-badge">{{ categories|length }}</span>
+            </a>
+            
+             <a href="/billing/business-settings/" class="nav-item mt-auto">
+                <i class="bi bi-gear"></i>
+                <span>Settings</span>
+            </a>
+        </div>
+
+        <div class="user-section">
+            <div class="business-badge-sidebar">
+                {% if business_info.logo %}
+                <img src="{{ business_info.logo.url }}" alt="Logo" class="business-logo-mini">
+                {% else %}
+                <div class="business-logo-mini d-flex align-items-center justify-content-center text-primary fw-bold">
+                    {{ business_info.company_name|slice:":1" }}
+                </div>
+                {% endif %}
+                <div class="d-flex flex-column text-truncate">
+                    <span class="small fw-bold text-white text-truncate">{{ business_info.company_name|default:"My Business" }}</span>
+                    <span class="small text-muted" style="font-size: 0.7rem;">Inventory Manager</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-scrollable">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <h4 class="fw-bold m-0 text-dark">Inventory Management</h4>
+                <div class="text-end">
+                    <span class="text-muted small">Manage stock, prices, and categories</span>
+                </div>
+            </div>
+
+            <!-- Add Product Form -->
+            <div id="add-product" class="form-container {% if active_tab == 'add-product' %}active-form{% endif %}">
+                <div class="glass-card">
+                    <h5 class="fw-bold text-primary mb-4"><i class="bi bi-plus-circle me-2"></i>Add New Product</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        <!-- Basic Info -->
+                        <h6 class="text-uppercase text-muted small fw-bold border-bottom pb-2 mb-3">Basic Information</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Product Name</label>
+                                {{ form.name|addclass:"form-control" }}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Category</label>
+                                {{ form.category|addclass:"form-select" }}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Unit</label>
+                                {{ form.unit|addclass:"form-select" }}
+                            </div>
+                        </div>
+
+                        <!-- Pricing -->
+                        <h6 class="text-uppercase text-muted small fw-bold border-bottom pb-2 mb-3">Pricing & Tax</h6>
+                        <div class="row g-3 mb-4 bg-light p-3 rounded mx-0 border">
+                            <div class="col-md-3">
+                                <label class="form-label">HSN Code</label>
+                                {{ form.hsn_number|addclass:"form-control" }}
+                            </div>
+                            <div class="col-md-3 d-none">
+                                <label class="form-label">Dealer Price</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">₹</span>
+                                    {{ form.dealer_price|addclass:"form-control border-start-0" }}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Selling Price</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">₹</span>
+                                    {{ form.selling_price|addclass:"form-control border-start-0" }}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">MRP</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">₹</span>
+                                    {{ form.mrp|addclass:"form-control border-start-0" }}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">GST Rate (%)</label>
+                                <div class="input-group">
+                                    {{ form.gst_rate|addclass:"form-control border-end-0" }}
+                                    <span class="input-group-text bg-white border-start-0">%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">IGST (%)</label>
+                                <div class="input-group">
+                                    {{ form.igst|addclass:"form-control border-end-0" }}
+                                    <span class="input-group-text bg-white border-start-0">%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">CGST (%)</label>
+                                <div class="input-group">
+                                    {{ form.cgst|addclass:"form-control border-end-0" }}
+                                    <span class="input-group-text bg-white border-start-0">%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">SGST (%)</label>
+                                <div class="input-group">
+                                    {{ form.sgst|addclass:"form-control border-end-0" }}
+                                    <span class="input-group-text bg-white border-start-0">%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Inventory -->
+                         <h6 class="text-uppercase text-muted small fw-bold border-bottom pb-2 mb-3">Stock & Batch</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <label class="form-label">Initial Quantity</label>
+                                {{ form.quantity|addclass:"form-control" }}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Min Stock Alert</label>
+                                {{ form.minimum_stock|addclass:"form-control" }}
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Batch No.</label>
+                                {{ form.batch_number|addclass:"form-control" }}
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">MFG Date</label>
+                                {{ form.mfg_date|addclass:"form-control" }}
+                            </div>
+                             <div class="col-md-2">
+                                <label class="form-label">Expiry Date</label>
+                                {{ form.expiry_date|addclass:"form-control" }}
+                            </div>
+                        </div>
+                        
+                         <div class="mb-4">
+                            <div class="form-check form-switch">
+                                {{ form.show_product|addclass:"form-check-input" }}
+                                <label class="form-check-label ms-2 small fw-bold">Show Product in Billing Search</label>
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">
+                                <i class="bi bi-check-lg me-2"></i>Save Product
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Update Product Form -->
+            <div id="update-product" class="form-container {% if active_tab == 'update-product' %}active-form{% endif %}">
+                <div class="glass-card">
+                    <h5 class="fw-bold text-primary mb-4"><i class="bi bi-pencil-square me-2"></i>Update Product</h5>
+                    
+                    <!-- Search Box -->
+                    <div class="p-3 bg-light rounded border mb-4">
+                        <label class="form-label">Search Product to Update</label>
+                        <div class="position-relative">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control border-start-0" id="search-product" placeholder="Type name or code..." onkeyup="fetchProducts()">
+                                <select class="form-select border-start-0" id="category-filter" style="max-width: 200px;" onchange="fetchProducts()">
+                                    <option value="">All Categories</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <!-- Dropdown Results -->
+                            <div id="search-results" class="position-absolute bg-white shadow rounded border w-100" style="top: 100%; z-index: 1000; max-height: 300px; overflow-y: auto; display: none;"></div>
+                        </div>
+                    </div>
+
+                    <form method="post" id="update-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="product_id" id="product-id">
+                        
+                         <!-- Basic Info -->
+                        <h6 class="text-uppercase text-muted small fw-bold border-bottom pb-2 mb-3">Product Details</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Product Name</label>
+                                <input type="text" class="form-control" name="name" id="new-product-name">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" name="category" id="new-category">
+                                    <option value="">Select Category</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Unit</label>
+                                <select class="form-select" name="unit" id="new-unit">
+                                    <option value="">Select Unit</option>
+                                    {% for unit in units %}
+                                    <option value="{{ unit.id }}">{{ unit.name }} ({{ unit.symbol }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                         <div class="row g-3 mb-4 bg-light p-3 rounded mx-0 border">
+                             <div class="col-md-3">
+                                <label class="form-label">HSN Code</label>
+                                <input type="text" class="form-control" name="hsn_number" id="new-hsn-number">
+                            </div>
+                             <div class="col-md-3 d-none">
+                                <label class="form-label">Dealer Price</label>
+                                <input type="number" class="form-control" name="dealer_price" id="new-dealer-price" step="0.01" value="0">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Selling Price</label>
+                                <input type="number" class="form-control" name="selling_price" id="new-selling-price" step="0.01">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">MRP</label>
+                                <input type="number" class="form-control" name="mrp" id="new-mrp" step="0.01">
+                            </div>
+                             <div class="col-md-3">
+                                <label class="form-label">GST %</label>
+                                <input type="number" class="form-control" name="gst_rate" id="new-gst-rate" step="0.01">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">IGST %</label>
+                                <input type="number" class="form-control" name="igst" id="new-igst" step="0.01">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">CGST %</label>
+                                <input type="number" class="form-control" name="cgst" id="new-cgst" step="0.01">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">SGST %</label>
+                                <input type="number" class="form-control" name="sgst" id="new-sgst" step="0.01">
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <label class="form-label">Quantity</label>
+                                <input type="number" class="form-control" name="quantity" id="new-quantity" step="0.001">
+                            </div>
+                             <div class="col-md-3">
+                                <label class="form-label">Min Stock</label>
+                                <input type="number" class="form-control" name="minimum_stock" id="new-minimum-stock" step="0.001">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Batch No.</label>
+                                <input type="text" class="form-control" name="batch_number" id="new-batch-number">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">MFG Date</label>
+                                <input type="date" class="form-control" name="mfg_date" id="new-mfg-date">
+                            </div>
+                             <div class="col-md-2">
+                                <label class="form-label">Expiry</label>
+                                <input type="date" class="form-control" name="expiry_date" id="new-expiry-date">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                             <div class="form-check form-switch">
+                                <input type="checkbox" class="form-check-input" name="show_product" id="new-show-product">
+                                <label class="form-check-label ms-2 small fw-bold">Show Product in Billing</label>
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                             <button type="submit" class="btn btn-warning text-white px-4 fw-bold shadow-sm">
+                                <i class="bi bi-arrow-repeat me-2"></i>Update
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- View Products List -->
+            <div id="view-products" class="form-container {% if active_tab == 'view-products' %}active-form{% endif %}">
+                <div class="glass-card p-0 overflow-hidden">
+                    <div class="p-4 border-bottom d-flex align-items-center justify-content-between">
+                         <h5 class="fw-bold text-primary m-0"><i class="bi bi-list-stars me-2"></i>Product List</h5>
+                         <div class="d-flex gap-2">
+                             <select class="form-select form-select-sm" id="category-table-filter" onchange="filterProducts()" style="width: 150px;">
+                                <option value="">All Categories</option>
+                                {% for category in categories %}
+                                <option value="{{ category.name }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <input type="text" class="form-control form-control-sm" id="product-table-search" placeholder="Search..." onkeyup="filterProducts()">
+                         </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light text-muted small text-uppercase">
+                                <tr>
+                                    <th class="ps-4">Name</th>
+                                    <th>Category</th>
+                                    <th>Price/MRP</th>
+                                    <th>Stock</th>
+                                    <th>Batch/Exp</th>
+                                    <th>Status</th>
+                                    <th class="text-end pe-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table-body">
+                                {% for product in products %}
+                                <tr data-product-id="{{ product.id }}" data-category="{{ product.category.name|default:'' }}">
+                                    <td class="ps-4">
+                                        <div class="fw-bold text-dark">{{ product.name }}</div>
+                                        <div class="small text-muted">ID: {{ product.id }}</div>
+                                    </td>
+                                    <td>{{ product.category.name|default:"-" }}</td>
+                                    <td>
+                                        <div>₹{{ product.selling_price }}</div>
+                                        <small class="text-muted text-decoration-line-through">₹{{ product.mrp }}</small>
+                                    </td>
+                                    <td>{{ product.quantity }} {{ product.unit.symbol|default:"" }}</td>
+                                    <td>
+                                        <div class="small">{{ product.batch_number|default:"-" }}</div>
+                                        <div class="small text-muted">{{ product.expiry_date|default:"" }}</div>
+                                    </td>
+                                    <td>
+                                         {% if product.quantity <= 0 %}
+                                         <span class="badge bg-danger rounded-pill">Out of Stock</span>
+                                         {% elif product.quantity <= product.minimum_stock %}
+                                         <span class="badge bg-warning text-dark rounded-pill">Low Stock</span>
+                                         {% else %}
+                                         <span class="badge bg-success rounded-pill">In Stock</span>
+                                         {% endif %}
+                                         {% if not product.show_product %}
+                                         <span class="badge bg-secondary rounded-pill ms-1">Hidden</span>
+                                         {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <button class="btn btn-sm btn-light border" onclick="editProduct({{ product.id }})"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-sm btn-light border text-danger" onclick="confirmDelete({{ product.id }}, '{{ product.name }}')"><i class="bi bi-trash"></i></button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5 text-muted">No products found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <div class="app-branding">
+            Billing Desk Pro v2.0
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <!-- Delete Modal -->
+    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 bg-danger text-white">
+                    <h5 class="modal-title fw-bold">Delete Product</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-0">Are you sure you want to delete <strong id="deleteProductName"></strong>?</p>
+                    <small class="text-muted d-block mt-2">This action cannot be undone.</small>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Manage Units Modal -->
+     <div class="modal fade" id="manageUnitsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Manage Units</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="addUnitForm" class="mb-4 p-3 bg-light rounded border">
+                        <h6 class="text-uppercase small fw-bold mb-3">Add New Unit</h6>
+                        <div class="row g-2">
+                            <div class="col-7">
+                                <input type="text" class="form-control" id="unitName" placeholder="Name (e.g. Kilogram)" required>
+                            </div>
+                            <div class="col-5">
+                                <input type="text" class="form-control" id="unitSymbol" placeholder="Symbol (kg)" required>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <button type="submit" class="btn btn-primary w-100 btn-sm fw-bold">Add Unit</button>
+                            </div>
+                        </div>
+                    </form>
+                    <h6 class="text-uppercase small fw-bold mb-3">Existing Units</h6>
+                    <div class="table-responsive border rounded" style="max-height: 200px; overflow-y:auto;">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="bg-light"><tr><th class="ps-3">Name</th><th>Symbol</th><th></th></tr></thead>
+                            <tbody id="unitsTableBody">
+                                {% for unit in units %}
+                                <tr>
+                                    <td class="ps-3">{{ unit.name }}</td><td>{{ unit.symbol }}</td>
+                                    <td class="text-end pe-3"><button class="btn btn-sm text-danger p-0" onclick="deleteUnit({{ unit.id }})"><i class="bi bi-trash"></i></button></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Manage Categories Modal -->
+     <div class="modal fade" id="manageCategoriesModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Manage Categories</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="addCategoryForm" class="mb-4 p-3 bg-light rounded border">
+                        <h6 class="text-uppercase small fw-bold mb-3">Add New Category</h6>
+                        <div class="mb-2">
+                            <input type="text" class="form-control" id="categoryName" placeholder="Category Name" required>
+                        </div>
+                         <div class="mb-2">
+                            <input type="text" class="form-control" id="categoryDesc" placeholder="Description (Optional)">
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="categoryFood">
+                            <label class="form-check-label small" for="categoryFood">Is Food Item?</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 btn-sm fw-bold">Add Category</button>
+                    </form>
+                    <h6 class="text-uppercase small fw-bold mb-3">Existing Categories</h6>
+                    <div class="table-responsive border rounded" style="max-height: 200px; overflow-y:auto;">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="bg-light"><tr><th class="ps-3">Name</th><th></th></tr></thead>
+                            <tbody id="categoriesTableBody">
+                                {% for cat in categories %}
+                                <tr>
+                                    <td class="ps-3">{{ cat.name }}</td>
+                                    <td class="text-end pe-3"><button class="btn btn-sm text-danger p-0" onclick="deleteCategory({{ cat.id }})"><i class="bi bi-trash"></i></button></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% if success %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => showAlert('success', '{{ success }}'));
+    </script>
+    {% endif %}
+    {% if error %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => showAlert('error', '{{ error }}'));
+    </script>
+    {% endif %}
+    
+    <script>
+        // --- UI Logic ---
+        function showForm(tabId) {
+            document.querySelectorAll('.form-container').forEach(el => el.classList.remove('active-form'));
+            document.getElementById(tabId).classList.add('active-form');
+            
+            document.querySelectorAll('.sidebar .nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId + '-link').classList.add('active');
+            
+            // Update URL to keep state on refresh
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tabId);
+            window.history.pushState({}, '', url);
+        }
+        
+        function showAlert(type, message) {
+            const container = document.getElementById('alertsContainer');
+            const div = document.createElement('div');
+            div.className = `floating-alert ${type}`;
+            div.innerHTML = `<i class="bi ${type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2"></i>${message}`;
+            container.appendChild(div);
+            
+            setTimeout(() => {
+                div.classList.add('fade-out');
+                setTimeout(() => div.remove(), 300);
+            }, 3000);
+        }
+        
+        // --- Search/Update Logic ---
+        let searchTimeout;
+        function fetchProducts() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const query = document.getElementById('search-product').value;
+                const cat = document.getElementById('category-filter').value;
+                const resultsDiv = document.getElementById('search-results');
+                
+                if(!query && !cat) {
+                    resultsDiv.style.display = 'none';
+                    return;
+                }
+                
+                fetch(`/inventory/search-product/?query=${query}&category=${cat}`)
+                .then(r => r.json())
+                .then(data => {
+                    resultsDiv.innerHTML = '';
+                    if(data.products.length) {
+                        data.products.forEach(p => {
+                            const d = document.createElement('div');
+                            d.className = 'p-2 border-bottom hover-bg-light cursor-pointer small';
+                            d.style.cursor = 'pointer';
+                            d.innerHTML = `<strong>${p.name}</strong> <span class="text-muted">ID:${p.id}</span> - ₹${p.selling_price}`;
+                            d.onclick = () => populateUpdateForm(p);
+                            d.onmouseenter = () => d.style.background = '#f8f9fa';
+                            d.onmouseleave = () => d.style.background = 'white';
+                            resultsDiv.appendChild(d);
+                        });
+                        resultsDiv.style.display = 'block';
+                    } else {
+                        resultsDiv.style.display = 'none';
+                    }
+                });
+            }, 300);
+        }
+        
+        function populateUpdateForm(product) {
+            document.getElementById('search-results').style.display = 'none';
+            document.getElementById('product-id').value = product.id;
+            
+            document.getElementById('new-product-name').value = product.name;
+            document.getElementById('new-dealer-price').value = product.dealer_price;
+            document.getElementById('new-selling-price').value = product.selling_price;
+            document.getElementById('new-mrp').value = product.mrp;
+            document.getElementById('new-gst-rate').value = product.gst_rate;
+            document.getElementById('new-igst').value = product.igst;
+            document.getElementById('new-cgst').value = product.cgst;
+            document.getElementById('new-sgst').value = product.sgst;
+            document.getElementById('new-hsn-number').value = product.hsn_number || '';
+            document.getElementById('new-quantity').value = product.quantity;
+            document.getElementById('new-minimum-stock').value = product.minimum_stock;
+            document.getElementById('new-batch-number').value = product.batch_number || '';
+            document.getElementById('new-mfg-date').value = product.mfg_date || '';
+            document.getElementById('new-expiry-date').value = product.expiry_date || '';
+            document.getElementById('new-show-product').checked = product.show_product;
+            
+            setSelectByText('new-category', product.category);
+            setSelectByText('new-unit', product.unit, true); 
+        }
+        
+        function setSelectByText(selectId, text, fuzzy=false) {
+            if(!text) return;
+            const select = document.getElementById(selectId);
+            for(let i=0; i<select.options.length; i++) {
+                if(fuzzy) {
+                    if(select.options[i].text.includes(text)) {
+                        select.selectedIndex = i;
+                        break;
+                    }
+                } else {
+                    if(select.options[i].text === text) {
+                        select.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // --- Table Filters ---
+        function filterProducts() {
+            const query = document.getElementById('product-table-search').value.toLowerCase();
+            const cat = document.getElementById('category-table-filter').value;
+            const rows = document.querySelectorAll('#products-table-body tr');
+            
+            rows.forEach(row => {
+               if(row.children.length === 1) return; // No items row
+               const name = row.children[0].textContent.toLowerCase();
+               const rowCat = row.getAttribute('data-category');
+               
+               const matchesQuery = name.includes(query);
+               const matchesCat = !cat || rowCat === cat;
+               
+               row.style.display = (matchesQuery && matchesCat) ? '' : 'none';
+            });
+        }
+        
+        // --- Edit Redirect ---
+        function editProduct(id) {
+            showForm('update-product');
+            fetch(`/inventory/product-details/${id}/`)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('product-id').value = data.id;
+                document.getElementById('new-product-name').value = data.name;
+                document.getElementById('new-dealer-price').value = data.dealer_price;
+                document.getElementById('new-selling-price').value = data.selling_price;
+                document.getElementById('new-mrp').value = data.mrp;
+                document.getElementById('new-gst-rate').value = data.gst_rate;
+                document.getElementById('new-quantity').value = data.quantity;
+                document.getElementById('new-minimum-stock').value = data.minimum_stock;
+                document.getElementById('new-batch-number').value = data.batch_number || '';
+                document.getElementById('new-expiry-date').value = data.expiry_date || '';
+                document.getElementById('new-show-product').checked = data.show_product;
+                
+                if(data.category) document.getElementById('new-category').value = data.category.id;
+                if(data.unit) document.getElementById('new-unit').value = data.unit.id;
+
+                // New fields
+                document.getElementById('new-igst').value = data.igst;
+                document.getElementById('new-cgst').value = data.cgst;
+                document.getElementById('new-sgst').value = data.sgst;
+                document.getElementById('new-hsn-number').value = data.hsn_number || '';
+                document.getElementById('new-mfg-date').value = data.mfg_date || '';
+            });
+        }
+        
+        // --- Delete ---
+        let deleteId = null;
+        function confirmDelete(id, name) {
+            deleteId = id;
+            document.getElementById('deleteProductName').innerText = name;
+            new bootstrap.Modal(document.getElementById('deleteConfirmationModal')).show();
+        }
+        
+        document.getElementById('confirmDeleteBtn').onclick = () => {
+            fetch(`/inventory/delete-product/${deleteId}/`, {
+                method: 'POST',
+                headers: {'X-CSRFToken': '{{ csrf_token }}'}
+            }).then(r => r.json()).then(data => {
+                if(data.success) location.reload();
+                else alert(data.error);
+            });
+        };
+        
+        // --- Modals for Settings ---
+        function showManageUnits() {
+            new bootstrap.Modal(document.getElementById('manageUnitsModal')).show();
+        }
+        function showManageCategories() {
+            new bootstrap.Modal(document.getElementById('manageCategoriesModal')).show();
+        }
+        
+        // Unit/Cat Forms
+        document.getElementById('addUnitForm').onsubmit = (e) => {
+            e.preventDefault();
+            fetch('/inventory/manage-units/', {
+                method: 'POST',
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                body: JSON.stringify({
+                    name: document.getElementById('unitName').value,
+                    symbol: document.getElementById('unitSymbol').value
+                })
+            }).then(r => r.json()).then(d => d.success ? location.reload() : alert(d.errors));
+        };
+        
+        document.getElementById('addCategoryForm').onsubmit = (e) => {
+            e.preventDefault();
+            fetch('/inventory/manage-categories/', {
+                method: 'POST',
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                body: JSON.stringify({
+                    name: document.getElementById('categoryName').value,
+                    description: document.getElementById('categoryDesc').value,
+                    is_food_item: document.getElementById('categoryFood').checked
+                })
+            }).then(r => r.json()).then(d => d.success ? location.reload() : alert(d.errors));
+        };
+        
+        function deleteUnit(id) {
+            if(confirm('Delete this unit?')) {
+                fetch(`/inventory/manage-units/${id}/`, {
+                    method: 'DELETE',
+                    headers: {'X-CSRFToken': '{{ csrf_token }}'}
+                }).then(r => r.json()).then(d => d.success ? location.reload() : alert(d.error));
+            }
+        }
+        
+
+        function deleteCategory(id) {
+             if(confirm('Delete this category?')) {
+                fetch(`/inventory/manage-categories/${id}/`, {
+                    method: 'DELETE',
+                    headers: {'X-CSRFToken': '{{ csrf_token }}'}
+                }).then(r => r.json()).then(d => d.success ? location.reload() : alert(d.error));
+            }
+        }
+
+        // --- Auto-Calculate Taxes ---
+        function attachTaxCalculator(gstId, igstId, cgstId, sgstId) {
+            const gstInput = document.getElementById(gstId);
+            const igstInput = document.getElementById(igstId);
+            const cgstInput = document.getElementById(cgstId);
+            const sgstInput = document.getElementById(sgstId);
+
+            if(!gstInput) return;
+
+            // GST Rate -> Others
+            gstInput.addEventListener('input', function() {
+                const rate = parseFloat(this.value) || 0;
+                if(igstInput) igstInput.value = rate.toFixed(2);
+                if(cgstInput) cgstInput.value = (rate / 2).toFixed(2);
+                if(sgstInput) sgstInput.value = (rate / 2).toFixed(2);
+            });
+            
+            // IGST -> Others
+            if(igstInput) {
+                igstInput.addEventListener('input', function() {
+                    const rate = parseFloat(this.value) || 0;
+                    if(gstInput) gstInput.value = rate.toFixed(2);
+                    if(cgstInput) cgstInput.value = (rate / 2).toFixed(2);
+                    if(sgstInput) sgstInput.value = (rate / 2).toFixed(2);
+                });
+            }
+
+            // CGST -> Others
+            if(cgstInput) {
+                cgstInput.addEventListener('input', function() {
+                    const rate = parseFloat(this.value) || 0;
+                    const fullRate = rate * 2;
+                    if(gstInput) gstInput.value = fullRate.toFixed(2);
+                    if(igstInput) igstInput.value = fullRate.toFixed(2);
+                    if(sgstInput) sgstInput.value = rate.toFixed(2); // Keep redundant consistent
+                });
+            }
+
+            // SGST -> Others
+            if(sgstInput) {
+                sgstInput.addEventListener('input', function() {
+                    const rate = parseFloat(this.value) || 0;
+                    const fullRate = rate * 2;
+                    if(gstInput) gstInput.value = fullRate.toFixed(2);
+                    if(igstInput) igstInput.value = fullRate.toFixed(2);
+                    if(cgstInput) cgstInput.value = rate.toFixed(2); // Keep redundant consistent
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // For Update Product Form
+            attachTaxCalculator('new-gst-rate', 'new-igst', 'new-cgst', 'new-sgst');
+            
+            // For Add Product Form (Django IDs)
+            attachTaxCalculator('id_gst_rate', 'id_igst', 'id_cgst', 'id_sgst');
+        });
+
+    </script>
+</body>
+</html>

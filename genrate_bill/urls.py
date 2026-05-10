@@ -11,6 +11,7 @@ urlpatterns = [
     path('business-settings/', views.business_settings, name='business_settings'),
     path('update-payment-status/<int:bill_id>/', views.update_payment_status, name='update_payment_status'),
     path('payment-history/<int:bill_id>/', views.get_payment_history, name='get_payment_history'),
+    path('delete-all-bills/', views.delete_all_bills, name='delete_all_bills'),
     path('backup/', views.backup_page, name='backup_page'),
     path('backup/create/', views.create_backup, name='create_backup'),
     path('backup/restore/', views.restore_backup, name='restore_backup'),

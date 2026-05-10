@@ -93,20 +93,34 @@ function populateDistricts(stateElementId, districtElementId, selectedDistrict =
     if (!stateSelect || !districtSelect) return;
 
     const selectedState = stateSelect.value;
+    const isDatalist = districtSelect.tagName.toUpperCase() === 'DATALIST';
 
     // Clear existing districts
-    districtSelect.innerHTML = '<option value="">Select District</option>';
+    if (isDatalist) {
+        districtSelect.innerHTML = ''; // No placeholder for datalist
+    } else {
+        districtSelect.innerHTML = '<option value="">Select District</option><option value="OTHER">+ Add District (Other)</option>';
+    }
 
     if (selectedState && stateDistrictsMap[selectedState]) {
         stateDistrictsMap[selectedState].forEach(district => {
             const option = document.createElement('option');
             option.value = district;
-            option.textContent = district;
-            if (district === selectedDistrict) {
-                option.selected = true;
+            if (isDatalist) {
+                // For datalist, textContent is used for display, value is what's inserted
+                option.textContent = district;
+            } else {
+                option.textContent = district;
+                if (district === selectedDistrict) {
+                    option.selected = true;
+                }
             }
             districtSelect.appendChild(option);
         });
+    }
+    
+    if (!isDatalist && selectedDistrict === "OTHER") {
+        districtSelect.value = "OTHER";
     }
 }
 

@@ -624,9 +624,8 @@
                                         </select>
                                     </div>
                                     <div class="col-md-3 col-6">
-                                         <select class="form-select form-control-desktop mt-1" id="customerDistrict">
-                                            <option value="">Select District</option>
-                                         </select>
+                                         <input type="text" class="form-control form-control-desktop mt-1" id="customerDistrict" list="districtOptions" placeholder="Select or Type District">
+                                         <datalist id="districtOptions"></datalist>
                                     </div>
                                     <div class="col-md-2 col-4">
                                          <input type="text" class="form-control form-control-desktop mt-1" id="customerSubDistrict" placeholder="Taluka">
@@ -708,8 +707,9 @@
                                     <div class="col-md-3 col-6">
                                         <label class="form-label-sm">Discount <span class="text-muted fw-normal">(Alt+D)</span></label>
                                          <div class="input-group input-group-sm" style="height: 28px;">
-                                            <span class="input-group-text py-0">₹</span>
-                                            <input type="number" class="form-control form-control-desktop" id="discount" value="0">
+                                            <button class="btn btn-outline-secondary px-2 py-0" type="button" id="discountToggleBtn" onclick="toggleDiscountType()" style="border-color: #cbd5e1; font-weight: bold; width: 35px; z-index: 0; background: #f8fafc; color: #475569;">₹</button>
+                                            <input type="number" class="form-control form-control-desktop" id="discount" value="0" min="0" step="any">
+                                            <input type="hidden" id="discountType" value="amount">
                                         </div>
                                     </div>
                                 </div>
@@ -787,8 +787,8 @@
             loadBillState();
             
             // Populate districts for default state (Maharashtra) if not handled by loadBillState
-            if(document.getElementById('customerState').value && document.getElementById('customerDistrict').options.length <= 1) {
-                populateDistricts('customerState', 'customerDistrict');
+            if(document.getElementById('customerState').value && document.getElementById('districtOptions').options.length === 0) {
+                populateDistricts('customerState', 'districtOptions');
             }
 
             // Set default date
@@ -1181,6 +1181,20 @@
             calculateTotal();
         }
 
+        function toggleDiscountType() {
+            const btn = document.getElementById('discountToggleBtn');
+            const typeInput = document.getElementById('discountType');
+            if (typeInput.value === 'amount') {
+                typeInput.value = 'percent';
+                btn.innerText = '%';
+            } else {
+                typeInput.value = 'amount';
+                btn.innerText = '₹';
+            }
+            calculateTotal();
+            saveBillState();
+        }
+
         function calculateTotal() {
             let subtotal = 0;
             let totalTax = 0;
@@ -1190,12 +1204,23 @@
                 totalTax += item.taxAmount;
             });
             
-            const discount = parseFloat(document.getElementById('discount').value) || 0;
+            const discountInput = parseFloat(document.getElementById('discount').value) || 0;
+            const isPercent = document.getElementById('discountType').value === 'percent';
+            let discount = 0;
+
+            if (isPercent) {
+                discount = subtotal * (discountInput / 100);
+            } else {
+                discount = discountInput;
+            }
+            
             const grandTotal = subtotal + totalTax - discount;
             
             document.getElementById('subtotal').innerText = '₹' + subtotal.toFixed(2);
             document.getElementById('totalTax').innerText = '₹' + totalTax.toFixed(2);
             document.getElementById('finalAmount').innerText = '₹' + grandTotal.toFixed(2);
+            
+            document.getElementById('discount').dataset.absoluteValue = discount.toFixed(2);
             
             // Update remaining/paid visual logic if needed
             const status = document.getElementById('paymentStatus').value;
@@ -1243,7 +1268,7 @@
                      expiry_date: item.expiry_date,
                      unit: item.unit
                  })),
-                 discount: document.getElementById('discount').value,
+                 discount: document.getElementById('discount').dataset.absoluteValue || "0",
                  payment_status: document.getElementById('paymentStatus').value,
                  payment_mode: document.getElementById('paymentMode').value,
                  payment_date: document.getElementById('paymentDate').value,
@@ -1379,6 +1404,8 @@
             document.getElementById('finalAmount').innerText = '₹0.00';
             document.getElementById('remainingAmount').innerText = '₹0.00';
             document.getElementById('discount').value = '0';
+            document.getElementById('discountType').value = 'amount';
+            document.getElementById('discountToggleBtn').innerText = '₹';
         }
 
         function saveBillState() {
@@ -1406,6 +1433,7 @@
                     paidAmount: document.getElementById('paidAmount').value
                 },
                 discount: document.getElementById('discount').value,
+                discountType: document.getElementById('discountType').value,
                 transport: {
                     mode: document.getElementById('transportMode')?.value || '',
                     vehicle: document.getElementById('vehicleNumber')?.value || '',
@@ -1460,7 +1488,8 @@
                     } else {
                          document.getElementById('customerState').value = 'MAHARASHTRA';
                     }
-                    populateDistricts('customerState', 'customerDistrict', state.customer.district || ''); // Populate and Select
+                    populateDistricts('customerState', 'districtOptions', state.customer.district || ''); // Populate and Select
+                    document.getElementById('customerDistrict').value = state.customer.district || '';
                     document.getElementById('customerPincode').value = state.customer.pincode || '';
                     document.getElementById('customerSubDistrict').value = state.customer.sub_district || '';
                     document.getElementById('customerGstNumber').value = state.customer.gst_number || '';
@@ -1479,6 +1508,10 @@
                     document.getElementById('paymentMode').value = state.payment.mode || 'Cash';
                     if (state.payment.date) document.getElementById('paymentDate').value = state.payment.date;
                     if (state.payment.paidAmount) document.getElementById('paidAmount').value = state.payment.paidAmount;
+                }
+                if (state.discountType) {
+                    document.getElementById('discountType').value = state.discountType;
+                    document.getElementById('discountToggleBtn').innerText = state.discountType === 'percent' ? '%' : '₹';
                 }
                 if (state.discount) document.getElementById('discount').value = state.discount;
                 if (state.transport) {
@@ -1509,7 +1542,7 @@
             } else {
                 setGlobalTax(true); // IGST
             }
-            populateDistricts('customerState', 'customerDistrict'); // Sync Districts with new State
+            populateDistricts('customerState', 'districtOptions'); // Sync Districts with new State
         }
         
         // --- HELPERS FROM SAVED BILLS FOR PRINTING ---

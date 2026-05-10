@@ -344,9 +344,8 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold text-muted text-uppercase">District</label>
-                                <select class="form-select" id="custDistrict">
-                                    <option value="">Select District</option>
-                                </select>
+                                <input type="text" class="form-control" id="custDistrict" list="custDistrictOptions" placeholder="Select or Type District">
+                                <datalist id="custDistrictOptions"></datalist>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold text-muted text-uppercase">City</label>
@@ -397,7 +396,7 @@
         function populateDistrictsModal(selectedDistrict = null) {
             // Delegate to shared function
             if (typeof populateDistricts === 'function') {
-                populateDistricts('custState', 'custDistrict', selectedDistrict);
+                populateDistricts('custState', 'custDistrictOptions', selectedDistrict);
             } else {
                 console.error("populateDistricts function not found. Check districts.js loading.");
             }
@@ -441,6 +440,7 @@
             document.getElementById('custState').value = state || 'MAHARASHTRA';
             
             populateDistrictsModal(district);
+            document.getElementById('custDistrict').value = district || '';
             
             document.getElementById('custTaluka').value = taluka;
             document.getElementById('custPincode').value = pincode;

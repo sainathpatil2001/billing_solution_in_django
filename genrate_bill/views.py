@@ -507,6 +507,35 @@ def business_settings(request):
         'business_info': business_info,
     })
 
+@require_http_methods(["POST"])
+def delete_all_bills(request):
+    """Delete all bills with password protection"""
+    try:
+        data = json.loads(request.body)
+        password = data.get('password')
+        
+        business_info = BusinessInformation.get_business_info()
+        if business_info.security_password != password:
+            return JsonResponse({'success': False, 'error': 'Invalid security password'}, status=403)
+            
+        with transaction.atomic():
+            # Delete all bills (cascades to BillItem and PaymentHistory)
+            Bill.objects.all().delete()
+            
+            # Reset the SQLite sequence for bills to restart bill number
+            from django.db import connection
+            with connection.cursor() as cursor:
+                table_name = Bill._meta.db_table
+                try:
+                    cursor.execute(f"DELETE FROM sqlite_sequence WHERE name='{table_name}'")
+                except Exception:
+                    pass
+            
+        return JsonResponse({'success': True, 'message': 'All bills deleted and bill numbers reset successfully'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
 @require_http_methods(["GET"])
 def create_backup(request):
     """Generate and download a full system backup"""

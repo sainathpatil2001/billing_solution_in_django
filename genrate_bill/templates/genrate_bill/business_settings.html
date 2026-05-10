@@ -294,9 +294,8 @@
                                 </div>
                                 <div class="col-md-6">
                                      <label class="form-label">District</label>
-                                    <select class="form-select" name="district" id="districtSelect" required>
-                                        <option value="">Select District</option>
-                                    </select>
+                                    <input type="text" class="form-control" name="district" id="districtSelect" list="districtOptions" placeholder="Select or Type District" value="{{ business_info.district }}" required>
+                                    <datalist id="districtOptions"></datalist>
                                 </div>
                                 <div class="col-md-6">
                                      <label class="form-label">Sub District (Taluka)</label>
@@ -315,12 +314,12 @@
                                         // Init districts
                                         const stateSelect = document.getElementById('stateSelect');
                                         stateSelect.addEventListener('change', function() {
-                                            populateDistricts('stateSelect', 'districtSelect');
+                                            populateDistricts('stateSelect', 'districtOptions');
                                         });
                                         
                                         // Initial population with selected value
                                         if(stateSelect.value) {
-                                            populateDistricts('stateSelect', 'districtSelect', "{{ business_info.district }}");
+                                            populateDistricts('stateSelect', 'districtOptions', "{{ business_info.district }}");
                                         }
                                     } else {
                                         console.error("Districts.js functions not loaded");
@@ -447,6 +446,24 @@
                         </div>
                     </div>
 
+                    <!-- Danger Zone -->
+                    <div class="col-lg-4 col-md-6">
+                        <div class="section-card" style="border: 1px solid #fee2e2;">
+                             <div class="section-header" style="border-bottom: 2px solid #fef2f2;">
+                                <div class="section-icon" style="background: linear-gradient(135deg, #fef2f2, #fee2e2); color: #ef4444; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.15);"><i class="bi bi-exclamation-triangle"></i></div>
+                                <h5 class="section-title text-danger">Danger Zone</h5>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-danger">Reset All Bills</label>
+                                <input type="password" class="form-control mb-2" id="deleteBillsPassword" placeholder="Enter Admin Password">
+                                <button type="button" class="btn btn-danger w-100 fw-bold" onclick="deleteAllBills()">
+                                    <i class="bi bi-trash3 me-2"></i> Delete & Reset Bills
+                                </button>
+                                <div class="form-text small mt-1 text-danger fw-semibold">Permanently deletes all bills and restarts bill number from 1.</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Terms & Conditions (Fixed Layout) -->
                     <div class="col-12">
                         <div class="section-card">
@@ -499,6 +516,7 @@
             btn.disabled = true;
 
             const formData = new FormData(this);
+
             fetch('/billing/business-settings/', {
                 method: 'POST',
                 body: formData,
@@ -575,6 +593,46 @@
             })
             .then(res => res.json())
             .then(data => { if(data.success) showToast('success', 'Settings saved'); });
+        }
+
+        function deleteAllBills() {
+            const password = document.getElementById('deleteBillsPassword').value;
+            if (!password) {
+                showToast('error', 'Please enter admin password');
+                return;
+            }
+
+            if (!confirm('EXTREME DANGER: This will permanently delete ALL saved bills and reset the bill counter to 1. Are you absolutely sure?')) {
+                return;
+            }
+
+            const btn = document.querySelector('button[onclick="deleteAllBills()"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Deleting...';
+            btn.disabled = true;
+
+            fetch("{% url 'delete_all_bills' %}", {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken') 
+                },
+                body: JSON.stringify({ password: password })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    showToast('success', data.message);
+                    document.getElementById('deleteBillsPassword').value = '';
+                } else {
+                    showToast('error', data.error);
+                }
+            })
+            .catch(err => showToast('error', 'Failed to delete bills'))
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
         }
 
         // Utils

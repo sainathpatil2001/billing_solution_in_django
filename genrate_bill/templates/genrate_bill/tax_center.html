@@ -256,6 +256,11 @@
             body { 
                 background: white;
                 -webkit-print-color-adjust: exact;
+                padding: 0 !important;
+                margin: 0 !important;
+                height: auto !important;
+                display: block !important;
+                overflow: visible !important;
             }
 
             /* Hide everything standard */
@@ -297,11 +302,7 @@
             /* The specific bill container adjustments for Half Page */
             #billDetails {
                 width: 100%;
-                /* A4 Height is ~297mm. Half is ~148mm. We set a max to ensure it fits.*/
-                max-height: 140mm; 
                 position: relative;
-                overflow: hidden;
-                /* border: 1px solid #ddd; */ /* Removed extra border */
                 padding: 0 !important;
                 box-sizing: border-box;
             }
@@ -342,8 +343,6 @@
 
             body.batch-printing .batch-bill-page {
                 width: 100%;
-                max-height: 140mm;
-                overflow: hidden;
                 page-break-inside: avoid;
                 break-inside: avoid;
                 margin: 0;
@@ -424,7 +423,7 @@
             <!-- Filter Section -->
             <div class="glass-card">
                 <div class="d-flex align-items-center justify-content-between mb-3">
-                    <h6 class="fw-bold text-primary m-0"><i class="bi bi-sliders me-2"></i>Step 1: Select Date Range and Filter Bills</h6>
+                    <h6 class="fw-bold text-primary m-0"><i class="bi bi-sliders me-2"></i>Filter Bills</h6>
                     <button onclick="clearSearch()" class="btn btn-sm btn-light border text-muted">
                         <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
                     </button>
@@ -483,12 +482,13 @@
                 </div>
                 
                 <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
-                    <span class="text-muted small text-uppercase fw-bold"><i class="bi bi-calculator me-2"></i>Step 2: Review Filtered Bills</span>
-                    <div class="text-end d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
                         <span class="text-muted small fw-bold me-2">Total Outstanding (Filtered):</span>
                         <span class="fs-4 fw-bold text-danger" id="totalRemainingDisplay">₹0.00</span>
+                    </div>
+                    <div class="text-end">
                         <button onclick="downloadFilteredBills()" class="btn btn-success fw-bold">
-                            <i class="bi bi-download me-2"></i>Step 3: Download Filtered Bills
+                            <i class="bi bi-printer me-2"></i>Print/Download Filtered Bills
                         </button>
                     </div>
                 </div>
@@ -880,8 +880,14 @@
                     const detailData = await detailResponse.json();
                     if (detailData.success) {
                         displayBillDetails(detailData.bill);
+                        
+                        // Wait 150ms for QR code setTimeout in displayBillDetails to finish
+                        await new Promise(r => setTimeout(r, 150));
+                        
                         const page = document.createElement('div');
                         page.className = 'batch-bill-page';
+                        page.style.width = '100%';
+                        page.style.pageBreakAfter = 'always';
                         page.innerHTML = document.getElementById('billDetails').innerHTML;
                         batchPrintArea.appendChild(page);
                     }
@@ -894,11 +900,16 @@
 
                 const originalTitle = document.title;
                 document.title = `Bills_${startDate}_to_${endDate}`;
-                document.body.classList.add('batch-printing');
+                
+                const originalContents = document.body.innerHTML;
+                const printContents = batchPrintArea.innerHTML;
+                document.body.innerHTML = printContents;
+                
                 setTimeout(() => {
                     window.print();
-                    document.body.classList.remove('batch-printing');
+                    document.body.innerHTML = originalContents;
                     document.title = originalTitle;
+                    window.location.reload();
                 }, 500);
             } catch (error) {
                 document.body.classList.remove('batch-printing');
@@ -1400,7 +1411,9 @@ function displayBillDetails(bill) {
 
     if (business.upi_id) {
         setTimeout(() => {
-            document.getElementById('qrcode-box').innerHTML = "";
+            const qrContainer = document.querySelector('#billDetails #qrcode-box');
+            if (!qrContainer) return;
+            qrContainer.innerHTML = "";
             try {
                 // Sanitize and Format
                 const vpa = (business.upi_id || '').trim();
@@ -1411,7 +1424,7 @@ function displayBillDetails(bill) {
                     // Standard UPI Format: upi://pay?pa=...&pn=...&am=...&tn=...
                     const upiLink = `upi://pay?pa=${encodeURIComponent(vpa)}&pn=${encodeURIComponent(name)}&am=${amount}&cu=INR&tn=Bill%20${encodeURIComponent(bill.bill_number)}`;
                     
-                    new QRCode(document.getElementById('qrcode-box'), {
+                    new QRCode(qrContainer, {
                         text: upiLink,
                         width: 85, height: 85,
                         colorDark : "#000000", colorLight : "#ffffff",

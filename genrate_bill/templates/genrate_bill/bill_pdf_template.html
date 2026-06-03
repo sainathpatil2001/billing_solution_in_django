@@ -7,19 +7,17 @@
             margin: 3mm;
         }
         body {
-            font-family: Arial, sans-serif;
-            font-size: 8px;
+            font-family: 'Arial', sans-serif;
+            font-size: 10px;
             color: #000;
             margin: 0;
             padding: 0;
             background: #fff;
-            line-height: 1.15;
+            line-height: 1.3;
         }
         .invoice-box {
             width: 100%;
-            max-height: 140mm;
             border: 2px solid #000;
-            overflow: hidden;
         }
         table {
             width: 100%;
@@ -27,7 +25,7 @@
         }
         td, th {
             vertical-align: top;
-            padding: 2px 2px;
+            padding: 4px;
         }
         .fw-bold { font-weight: bold; }
         .text-uppercase { text-transform: uppercase; }
@@ -36,86 +34,72 @@
         .border-right { border-right: 1px solid #000; }
         .border-bottom { border-bottom: 1px solid #000; }
         .border-top { border-top: 1px solid #000; }
-        .company-name {
-            font-size: 16px;
-            font-weight: bold;
-            line-height: 1.1;
-        }
-        .invoice-title {
-            font-size: 12px;
-            font-weight: bold;
-            text-decoration: underline;
-        }
+        
+        .company-name { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+        .invoice-title { font-size: 16px; font-weight: bold; text-decoration: underline; margin-bottom: 5px; }
+
+        .items-table { border-bottom: 1px solid #000; }
         .items-table th {
-            background: #f8f9fa;
+            background-color: #f8f9fa;
             border-right: 1px solid #000;
             border-bottom: 1px solid #000;
-            font-size: 7px;
             font-weight: bold;
             text-align: center;
-            padding: 3px 2px;
+            padding: 4px 2px;
         }
         .items-table td {
             border-right: 1px solid #000;
             border-bottom: 1px solid #000;
-            font-size: 7px;
-            padding: 3px 2px;
+            padding: 4px 2px;
         }
-        .items-table th:last-child,
-        .items-table td:last-child {
-            border-right: 0;
-        }
-        .tax-table td,
-        .tax-table th {
+        .items-table tr:last-child td { border-bottom: none; }
+        .items-table th:last-child, .items-table td:last-child { border-right: 0; }
+
+        .tax-table td, .tax-table th {
             border-right: 1px solid #000;
             border-bottom: 1px solid #000;
-            font-size: 7px;
             text-align: center;
             padding: 2px 2px;
+            font-size: 9px;
         }
         .tax-table th {
-            background: #ccc;
+            background-color: #ccc;
             font-weight: bold;
         }
         .tax-class {
-            background: #ddd;
+            background-color: #ddd;
             font-weight: bold;
             text-align: left;
             padding-left: 5px;
         }
+
         .totals-table td {
-            font-size: 8px;
-            padding: 3px 8px;
+            padding: 5px 10px;
+            font-size: 11px;
             border-bottom: 1px solid #eee;
+            line-height: 1.8;
         }
         .grand-total {
-            background: #ccc;
+            background-color: #ccc;
             border-top: 2px solid #000;
-            padding: 8px 8px;
+            padding: 15px 10px;
             text-align: center;
-        }
-        .grand-total-label {
-            font-size: 12px;
-        }
-        .grand-total-value {
-            font-size: 17px;
-            font-weight: bold;
         }
         .terms-list {
             margin: 0;
             padding-left: 15px;
-            font-size: 7px;
-        }
-        .signature-box {
-            text-align: center;
-            font-size: 8px;
-            min-height: 55px;
+            font-size: 9px;
+            list-style: decimal;
         }
         .watermark-text {
             color: #e6e6e6;
-            font-size: 18px;
+            font-size: 24px;
             font-weight: bold;
             text-align: center;
+        }
+        .signature-box {
+            text-align: center;
+            font-size: 10px;
         }
     </style>
 </head>
@@ -123,58 +107,65 @@
     <div class="invoice-box">
         <table class="border-bottom">
             <tr>
-                <td width="40%" class="border-right" style="padding: 5px;">
-                    <table class="border-bottom" style="margin-bottom: 3px;">
+                <td width="40%" class="border-right" style="padding: 8px;">
+                    <table style="margin-bottom: 4px; border-bottom: 1px solid #000; padding-bottom: 4px;">
                         <tr>
                             {% if business_info.logo %}
-                            <td width="42" style="padding: 0 8px 3px 0;">
+                            <td width="42" style="padding: 0 10px 0 0;">
                                 <img src="{{ business_info.logo.path }}" style="width: 40px; height: 40px;">
                             </td>
                             {% endif %}
-                            <td style="padding: 0 0 4px 0;">
-                                <div class="company-name text-uppercase">{{ business_info.company_name|default:"My Company" }}</div>
+                            <td style="padding: 0;">
+                                <div class="company-name text-uppercase" style="line-height: 1.1;">{{ business_info.company_name|default:"My Company" }}</div>
                             </td>
                         </tr>
                     </table>
-                    <div style="font-size: 8px;">
+                    <div style="font-size: 10px;">
                         <div class="fw-bold">{{ business_info.address_line1|default:""|upper }}</div>
                         {% if business_info.address_line2 %}<div>{{ business_info.address_line2|upper }}</div>{% endif %}
                         <div>{{ business_info.sub_district|default:""|upper }}{% if business_info.district %}, {{ business_info.district|upper }}{% endif %}{% if business_info.state %}, {{ business_info.state|upper }}{% endif %} - {{ business_info.pincode|default:"" }}</div>
-                        <div class="fw-bold">M: {{ business_info.phone|default:"" }}</div>
-                        <div><span class="fw-bold">GSTIN:</span> {{ business_info.gst_number|default:"-" }}</div>
+                        <div class="fw-bold" style="margin-top: 4px;">M: {{ business_info.phone|default:"" }}</div>
+                        <div style="margin-top: 4px;"><span class="fw-bold">GSTIN:</span> {{ business_info.gst_number|default:"-" }}</div>
                         {% if business_info.pan_number %}<div><span class="fw-bold">PAN:</span> {{ business_info.pan_number }}</div>{% endif %}
                         {% if business_info.email %}<div>Email: {{ business_info.email }}</div>{% endif %}
                     </div>
                 </td>
-                <td width="43%" class="border-right" style="padding: 5px;">
-                    <div class="fw-bold border-bottom" style="padding-bottom: 3px; margin-bottom: 4px;">Details of Receiver (Billed To)</div>
+                <td width="45%" class="border-right" style="padding: 8px;">
+                    <div class="fw-bold border-bottom" style="padding-bottom: 4px; margin-bottom: 4px;">Details of Receiver (Billed To)</div>
                     <div class="fw-bold text-uppercase">{{ bill.customer.name }}</div>
-                    <div style="font-size: 8px;">
+                    <div style="font-size: 10px;">
                         {{ bill.customer.address|default:"" }}{% if bill.customer.city %}, {{ bill.customer.city }}{% endif %}<br>
                         {% if bill.customer.phone %}Ph: {{ bill.customer.phone }}{% endif %}
                     </div>
-                    <div style="font-size: 8px; margin-top: 4px;">
+                    <div style="font-size: 10px; margin-top: 4px;">
                         {% if bill.customer.sub_district %}<span class="fw-bold">Tal:</span> {{ bill.customer.sub_district }}, {% endif %}
                         <span class="fw-bold">State:</span> {{ bill.customer.state|default:"MAHARASHTRA" }}{% if bill.customer.pincode %} - {{ bill.customer.pincode }}{% endif %}
                     </div>
-                    {% if bill.customer.gst_number %}<div style="font-size: 8px;"><span class="fw-bold">GSTIN:</span> {{ bill.customer.gst_number }}</div>{% endif %}
-                    {% if bill.customer.drug_license_number %}<div style="font-size: 8px;"><span class="fw-bold">Drug Lic:</span> {{ bill.customer.drug_license_number }}</div>{% endif %}
-                    {% if bill.customer.pan_number %}<div style="font-size: 8px;"><span class="fw-bold">PAN:</span> {{ bill.customer.pan_number }}</div>{% endif %}
+                    {% if bill.customer.gst_number %}<div style="font-size: 10px; margin-top: 4px;"><span class="fw-bold">GSTIN:</span> {{ bill.customer.gst_number }}</div>{% endif %}
+                    {% if bill.customer.drug_license_number %}<div style="font-size: 10px; margin-top: 4px;"><span class="fw-bold">Drug Lic:</span> {{ bill.customer.drug_license_number }}</div>{% endif %}
+                    {% if bill.customer.pan_number %}<div style="font-size: 10px; margin-top: 4px;"><span class="fw-bold">PAN:</span> {{ bill.customer.pan_number }}</div>{% endif %}
 
-                    <div class="border-top" style="margin-top: 6px; padding-top: 4px;">
-                        <div class="invoice-title text-center">TAX INVOICE</div>
-                        <div style="font-size: 8px;">
-                            <span class="fw-bold">Invoice No:</span>
-                            <span class="fw-bold">INV-{{ bill.bill_number }}</span>
-                            <span style="float: right;"><span class="fw-bold">Date:</span> {{ bill.date|date:"Y-m-d" }}</span>
-                        </div>
-                        {% if bill.payment_mode %}
-                        <div style="font-size: 8px;"><span class="fw-bold">Mode:</span> <span class="text-uppercase">{{ bill.payment_mode }}</span></div>
-                        {% endif %}
+                    <div class="border-top" style="margin-top: 5px; padding-top: 5px;">
+                        <div class="invoice-title text-center" style="font-size: 14px;">TAX INVOICE</div>
+                        <table style="font-size: 11px;">
+                            <tr>
+                                <td class="fw-bold" style="padding: 0; width: 60px;">Invoice No:</td>
+                                <td class="fw-bold" style="padding: 0;">INV-{{ bill.bill_number }}</td>
+                                <td class="fw-bold text-right" style="padding: 0; width: 40px;">Date:</td>
+                                <td class="text-right" style="padding: 0;">{{ bill.date|date:"Y-m-d" }}</td>
+                            </tr>
+                            {% if bill.payment_mode %}
+                            <tr>
+                                <td class="fw-bold" style="padding: 0;">Mode:</td>
+                                <td class="text-uppercase" style="padding: 0;">{{ bill.payment_mode }}</td>
+                                <td colspan="2" style="padding: 0;"></td>
+                            </tr>
+                            {% endif %}
+                        </table>
                     </div>
                 </td>
-                <td width="17%" class="text-center" style="padding: 5px;">
-                    <div style="height: 58px; border: 1px solid #ddd;"></div>
+                <td width="15%" class="text-center" style="padding: 5px; vertical-align: middle;">
+                    <!-- Barcode Box: Empty for now in PDF -->
                 </td>
             </tr>
         </table>
@@ -204,7 +195,7 @@
                 <tr>
                     <td class="text-center">{{ forloop.counter }}</td>
                     <td>{{ item.hsn_number|default:"" }}</td>
-                    <td class="fw-bold">{{ item.product.name }}</td>
+                    <td class="fw-bold" style="text-align: left;">{{ item.product.name }}</td>
                     <td class="text-center">{{ item.unit|default:"" }}</td>
                     <td>{{ item.batch_number|default:"" }}</td>
                     <td class="text-center">{{ item.mfg_date|date:"Y-m" }}</td>
@@ -246,7 +237,7 @@
                             <td>{{ group.total_tax|stringformat:".2f" }}</td>
                         </tr>
                         {% endfor %}
-                        <tr class="fw-bold">
+                        <tr class="fw-bold" style="border-top: 1px solid #000;">
                             <td style="text-align: left; padding-left: 5px;">TOTAL</td>
                             <td>{{ totals.basic|stringformat:".2f" }}</td>
                             <td>0.00</td>
@@ -257,28 +248,30 @@
                         </tr>
                     </table>
 
-                    <div class="border-top" style="padding: 3px 5px; font-size: 8px; font-style: italic;">
+                    <div class="border-top" style="padding: 4px 5px; font-size: 11px; font-style: italic;">
                         <span class="fw-bold" style="font-style: normal;">Amount in Words:</span> {{ totals.words }}
                     </div>
-                    <div class="border-top" style="padding: 2px 5px; font-size: 8px;">
-                        <span class="fw-bold">Remarks:</span> M.R.P revised as per reduced GST slab, please Ensure for benefit to consumer.
+                    <div class="border-top" style="padding: 2px 5px; font-size: 10px;">
+                        <span class="fw-bold">Remarks:</span> {{ bill.remarks|default:"M.R.P revised as per reduced GST slab, please Ensure for benefit to consumer." }}
                     </div>
                     <table class="border-top">
                         <tr>
                             <td width="50%" class="border-right" style="padding: 5px;">
-                                <div style="text-decoration: underline; font-weight: bold; font-size: 8px; margin-bottom: 2px;">Terms & Conditions</div>
+                                <div style="text-decoration: underline; font-weight: bold; font-size: 10px; margin-bottom: 2px;">Terms & Conditions</div>
                                 <ol class="terms-list">
                                     {% for term in terms %}
                                     <li>{{ term }}</li>
                                     {% endfor %}
                                 </ol>
                             </td>
-                            <td width="50%" class="signature-box" style="padding: 5px;">
+                            <td width="50%" class="signature-box" style="padding: 5px; vertical-align: bottom;">
                                 <div class="watermark-text">{{ business_info.company_name|default:"Sanjeevani Pharma" }}</div>
                                 {% if business_info.signature %}
                                 <img src="{{ business_info.signature.path }}" style="max-height: 50px; max-width: 120px;"><br>
+                                {% else %}
+                                <br><br>
                                 {% endif %}
-                                <div style="margin-top: 8px;">Authorized Signatory</div>
+                                <div style="margin-top: 5px;">Authorized Signatory</div>
                             </td>
                         </tr>
                     </table>
@@ -315,14 +308,14 @@
                             <td class="text-right">{{ totals.sgst|stringformat:".2f" }}</td>
                         </tr>
                         {% endif %}
-                        <tr>
-                            <td class="fw-bold">Total Items: {{ items|length }}</td>
-                            <td class="text-right fw-bold">Total Qty: {{ totals.quantity|stringformat:".2f" }}</td>
-                        </tr>
                     </table>
+                    <div style="padding: 5px 10px; font-size: 10px; font-weight: bold; line-height: 1.5;">
+                        <div>Total Items: {{ items|length }}</div>
+                        <div>Total Qty: {{ totals.quantity|stringformat:".2f" }}</div>
+                    </div>
                     <div class="grand-total">
-                        <div class="grand-total-label">Grand Total</div>
-                        <div class="grand-total-value">{{ totals.grand_total|stringformat:".2f" }}</div>
+                        <div style="font-size: 14px;">Grand Total</div>
+                        <div style="font-size: 20px; font-weight: bold;">{{ totals.grand_total|stringformat:".2f" }}</div>
                     </div>
                 </td>
             </tr>

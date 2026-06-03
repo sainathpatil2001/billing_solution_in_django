@@ -1290,7 +1290,9 @@ function displayBillDetails(bill) {
 
     if (business.upi_id) {
         setTimeout(() => {
-            document.getElementById('qrcode-box').innerHTML = "";
+            const qrContainer = document.querySelector('#billDetails #qrcode-box');
+            if (!qrContainer) return;
+            qrContainer.innerHTML = "";
             try {
                 // Sanitize and Format
                 const vpa = (business.upi_id || '').trim();
@@ -1301,7 +1303,7 @@ function displayBillDetails(bill) {
                     // Standard UPI Format: upi://pay?pa=...&pn=...&am=...&tn=...
                     const upiLink = `upi://pay?pa=${encodeURIComponent(vpa)}&pn=${encodeURIComponent(name)}&am=${amount}&cu=INR&tn=Bill%20${encodeURIComponent(bill.bill_number)}`;
                     
-                    new QRCode(document.getElementById('qrcode-box'), {
+                    new QRCode(qrContainer, {
                         text: upiLink,
                         width: 85, height: 85,
                         colorDark : "#000000", colorLight : "#ffffff",

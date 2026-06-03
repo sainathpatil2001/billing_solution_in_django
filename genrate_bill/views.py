@@ -1229,27 +1229,46 @@ def render_to_pdf(template_src, context_dict={}):
 
 @require_http_methods(["GET"])
 def download_bills_zip(request):
-    """View to download all bills in a date range as individual PDFs in a ZIP"""
-    start_date_str = request.GET.get('start_date')
-    end_date_str = request.GET.get('end_date')
+    """View to download all bills matching filters as individual PDFs in a ZIP"""
+    bill_number = request.GET.get('bill_number', '')
+    customer_name = request.GET.get('customer_name', '')
+    mobile_number = request.GET.get('mobile_number', '')
+    start_date_str = request.GET.get('start_date', '')
+    end_date_str = request.GET.get('end_date', '')
     
-    if not start_date_str or not end_date_str:
-        return JsonResponse({'success': False, 'error': 'Dates are required'}, status=400)
-    
+    bills = Bill.objects.all().order_by('date', 'bill_number')
+
+    if bill_number:
+        bills = bills.filter(bill_number__icontains=bill_number)
+
+    if customer_name:
+        from django.db.models import Q
+        bills = bills.filter(
+            Q(customer__first_name__icontains=customer_name) |
+            Q(customer__middle_name__icontains=customer_name) |
+            Q(customer__last_name__icontains=customer_name)
+        )
+
+    if mobile_number:
+        bills = bills.filter(customer__phone__icontains=mobile_number)
+
     try:
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        if start_date_str:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            start_datetime = timezone.make_aware(datetime.combine(start_date, time.min))
+            bills = bills.filter(date__gte=start_datetime)
+            
+        if end_date_str:
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            end_datetime = timezone.make_aware(datetime.combine(end_date, time.max))
+            bills = bills.filter(date__lte=end_datetime)
     except ValueError:
         return JsonResponse({'success': False, 'error': 'Invalid date format'}, status=400)
 
-    start_datetime = datetime.combine(start_date, time.min)
-    end_datetime = datetime.combine(end_date, time.max)
-    
-    bills = Bill.objects.filter(date__range=(start_datetime, end_datetime)).order_by('bill_number')
     business_info = BusinessInformation.get_business_info()
     
     if not bills.exists():
-        return JsonResponse({'success': False, 'error': 'No bills found in this range'}, status=404)
+        return JsonResponse({'success': False, 'error': 'No bills found matching filters'}, status=404)
     
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, 'w') as zip_file:

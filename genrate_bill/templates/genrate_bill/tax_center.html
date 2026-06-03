@@ -879,11 +879,11 @@
                 
                 // Use the existing batchPrintArea as the visible container so html2canvas doesn't fail
                 const renderContainer = document.createElement('div');
-                renderContainer.style.width = '210mm'; // A4 width approx
+                renderContainer.style.width = '204mm'; // A4 width (210mm) minus 2*3mm margins
                 renderContainer.style.margin = '0 auto';
                 renderContainer.style.backgroundColor = 'white';
                 renderContainer.style.color = 'black';
-                renderContainer.style.padding = '20px'; // Ensure some breathing room
+                renderContainer.style.boxSizing = 'border-box';
                 batchPrintArea.appendChild(renderContainer);
 
                 for (const bill of data.bills) {

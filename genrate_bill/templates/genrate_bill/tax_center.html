@@ -862,19 +862,30 @@
             if (mobileNumber) params.append('mobile_number', mobileNumber);
 
             const batchPrintArea = document.getElementById('batchPrintArea');
-            batchPrintArea.innerHTML = '<div class="text-center p-5">Preparing bills...</div>';
+            batchPrintArea.innerHTML = '<div class="text-center p-5 fw-bold text-primary">Generating ZIP of PDFs. This may take a moment...</div>';
+            batchPrintArea.style.display = 'block';
 
             try {
                 const response = await fetch(`/billing/tax-center/search-bills/?${params.toString()}`);
                 const data = await response.json();
 
                 if (!data.success || !data.bills || data.bills.length === 0) {
-                    batchPrintArea.innerHTML = '';
+                    batchPrintArea.style.display = 'none';
                     showToast(data.error || 'No bills found for selected filters.', 'error');
                     return;
                 }
 
-                batchPrintArea.innerHTML = '';
+                const zip = new JSZip();
+                
+                // Use the existing batchPrintArea as the visible container so html2canvas doesn't fail
+                const renderContainer = document.createElement('div');
+                renderContainer.style.width = '210mm'; // A4 width approx
+                renderContainer.style.margin = '0 auto';
+                renderContainer.style.backgroundColor = 'white';
+                renderContainer.style.color = 'black';
+                renderContainer.style.padding = '20px'; // Ensure some breathing room
+                batchPrintArea.appendChild(renderContainer);
+
                 for (const bill of data.bills) {
                     const detailResponse = await fetch(`/billing/bill-details/${bill.bill_number}/`);
                     const detailData = await detailResponse.json();
@@ -884,37 +895,46 @@
                         // Wait 150ms for QR code setTimeout in displayBillDetails to finish
                         await new Promise(r => setTimeout(r, 150));
                         
-                        const page = document.createElement('div');
-                        page.className = 'batch-bill-page';
-                        page.style.width = '100%';
-                        page.style.pageBreakAfter = 'always';
-                        page.innerHTML = document.getElementById('billDetails').innerHTML;
-                        batchPrintArea.appendChild(page);
+                        renderContainer.innerHTML = document.getElementById('billDetails').innerHTML;
+                        
+                        // CRITICAL: Wait for browser to actually paint the new DOM nodes before taking a snapshot!
+                        // We also scroll it into view so html2canvas definitely sees it
+                        renderContainer.scrollIntoView({ behavior: 'instant', block: 'center' });
+                        await new Promise(r => setTimeout(r, 150));
+                        
+                        const opt = {
+                            margin:       3,
+                            filename:     `Bill_${bill.bill_number}.pdf`,
+                            image:        { type: 'jpeg', quality: 1 },
+                            html2canvas:  { scale: 2, useCORS: true, logging: true },
+                            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                        };
+                        
+                        const pdfBlob = await html2pdf().set(opt).from(renderContainer).output('blob');
+                        zip.file(`Bill_${bill.bill_number}.pdf`, pdfBlob);
                     }
                 }
+                
+                batchPrintArea.innerHTML = '';
 
-                if (!batchPrintArea.children.length) {
-                    showToast('Unable to prepare bill layout for download.', 'error');
+                if (Object.keys(zip.files).length === 0) {
+                    batchPrintArea.style.display = 'none';
+                    showToast('Unable to prepare bills for download.', 'error');
                     return;
                 }
 
-                const originalTitle = document.title;
-                document.title = `Bills_${startDate}_to_${endDate}`;
+                const content = await zip.generateAsync({type:"blob"});
+                saveAs(content, `Bills_${startDate}_to_${endDate}.zip`);
                 
-                const originalContents = document.body.innerHTML;
-                const printContents = batchPrintArea.innerHTML;
-                document.body.innerHTML = printContents;
-                
-                setTimeout(() => {
-                    window.print();
-                    document.body.innerHTML = originalContents;
-                    document.title = originalTitle;
-                    window.location.reload();
-                }, 500);
+                batchPrintArea.style.display = 'none';
+                showToast('ZIP downloaded successfully!', 'success');
+
             } catch (error) {
-                document.body.classList.remove('batch-printing');
-                batchPrintArea.innerHTML = '';
-                showToast('Failed to prepare bills for download.', 'error');
+                console.error("ZIP Error:", error);
+                if (document.getElementById('batchPrintArea')) {
+                    document.getElementById('batchPrintArea').style.display = 'none';
+                }
+                showToast(error.message || 'Failed to prepare bills for download.', 'error');
             }
         }
 
@@ -1608,5 +1628,10 @@ function displayBillDetails(bill) {
         }
 
     </script>
+    <!-- Libraries for Frontend PDF ZIP Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
 </body>
 </html>
